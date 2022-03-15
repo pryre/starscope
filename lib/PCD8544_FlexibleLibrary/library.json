@@ -1,0 +1,23 @@
+{
+    "name": "PCD8544_FlexibleLibrary",
+    "keywords": "pcd8544, lcd, nokia, 5110, nokia-5110",
+    "description": "Flexible and powerful PCD8544 library. Only for local install because some files are to be edited by user.",
+    "repository":
+    {
+        "type": "git",
+        "url": "https://github.com/Danya0x07/PCD8544_FlexibleLibrary.git"
+    },
+    "authors":
+    {
+        "name": "Daniel Efimenko",
+        "email": "dlef0xf8@gmail.com",
+        "maintainer": true
+    },
+    "version": "1.0.0",
+    "frameworks": "*",
+    "platforms": "*",
+    "license": "MIT",
+    "examples": [
+        "examples/*"
+    ]
+}
