@@ -13,7 +13,7 @@ int main()
     display.splash_screen(3000);
 	display.test_img_scale();
 
-    board.blink_forever(0.5);
+    board.blink_forever(2);
 
 	return 0;
 }

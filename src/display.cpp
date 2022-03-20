@@ -12,7 +12,7 @@ Display::Display(const Board &board) :
 }
 
 void Display::init() {
-
+    _board.power_extdev_display(true);
     pcd8544_reset();
     pcd8544_configure(&_config);
     pcd8544_set_mode(PCD8544_MODE_NORMAL);

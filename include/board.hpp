@@ -5,6 +5,10 @@
 #include <stdbool.h>
 
 class Board {
+    private:
+        static bool _first_init_flag;
+        static bool _first_init_setup();
+
     public:
         Board();
 
@@ -19,6 +23,8 @@ class Board {
 
         // Sets the output of a digital pin
         void digital_set(uint32_t port, uint32_t pin, bool onoff) const;
+
+        void power_extdev_display(bool onoff) const;
 
         // Initialize the SPI port
         void spi_init();

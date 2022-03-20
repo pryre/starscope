@@ -35,10 +35,9 @@ void _spi_send_byte(uint8_t byte) {
 }
 
 void _delay_ms(uint32_t ms) {
-
-	for (uint32_t i = 0; i < 1000*ms; i++) {	/* Wait a bit. */
-		__asm__("nop");
-	}
+    for (uint32_t j = 0; j < ms; j++)
+		for (uint32_t i = 0; i < 16*1000; i++) //XXX: Board is running at 100MHz, so a few instructions per us?
+			__asm__("nop");
 }
 
 #ifdef __cplusplus

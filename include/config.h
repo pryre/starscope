@@ -12,8 +12,11 @@ extern "C" {
 #include <libopencm3/stm32/spi.h>
 
 #define DEV_LED (RCC_GPIOC)
-#define PORT_LED (GPIOC)
+
+#define DEV_IOC (RCC_GPIOC)
+#define PORT_IOC (GPIOC)
 #define PIN_LED (GPIO13)
+#define PIN_POWER (GPIO14)
 
 #define PERIPH_SPI (SPI2)
 #define DEV_SPI (RCC_SPI2)
