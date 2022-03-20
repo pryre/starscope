@@ -1,3 +1,11 @@
+#ifndef _STARSCOPE_CONFIG_H
+#define _STARSCOPE_CONFIG_H
+
+#include <inttypes.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #include <libopencm3/stm32/rcc.h>
 #include <libopencm3/stm32/gpio.h>
@@ -13,9 +21,16 @@
 #define PDEV_SPI_AUX (RCC_GPIOB)
 #define PORT_SPI_MAIN (GPIOB)
 #define PORT_SPI_AUX (GPIOB)
+#define PIN_SPI_MAIN_NSS (GPIO12)
 #define PIN_SPI_MAIN_SCK (GPIO13)
 #define PIN_SPI_MAIN_MISO (GPIO14)
 #define PIN_SPI_MAIN_MOSI (GPIO15)
 #define PIN_SPI_AUX_CE (GPIO10)
 #define PIN_SPI_AUX_RE (GPIO2)
 #define PIN_SPI_AUX_DC (GPIO1)
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif

@@ -1,7 +1,10 @@
-#include <pcd8544_port.h>
-#include <inttypes.h>
+//XXX: handlers for pcd8544_port.h
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-#include <setup.h>
+#include <pcd8544_port.h>
+#include <config.h>
 
 void _ce_high(void) {
 	gpio_set(PORT_SPI_AUX, PIN_SPI_AUX_CE);
@@ -37,3 +40,7 @@ void _delay_ms(uint32_t ms) {
 		__asm__("nop");
 	}
 }
+
+#ifdef __cplusplus
+}
+#endif

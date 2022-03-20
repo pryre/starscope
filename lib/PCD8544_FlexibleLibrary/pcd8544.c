@@ -115,16 +115,12 @@ void pcd8544_reset(void)
     _rst_high();
 }
 
-void pcd8544_configure(pcd8544_config *config)
+void pcd8544_configure(const pcd8544_config *config)
 {
-    config->bias &= 0x07;
-    config->contrast &= 0x7F;
-    config->tempcoeff &= 0x03;
-
     write_cmd(CMD_FUNCTION_SET | FS_H);
-    write_cmd(CMD_BIAS_SYSTEM | config->bias);
-    write_cmd(CMD_TEMPERATURE_CTRL | config->tempcoeff);
-    write_cmd(CMD_SET_VOP | config->contrast);
+    write_cmd(CMD_BIAS_SYSTEM | (config->bias & 0x07));
+    write_cmd(CMD_TEMPERATURE_CTRL | (config->tempcoeff & 0x03));
+    write_cmd(CMD_SET_VOP | (config->contrast & 0x7F));
     write_cmd(CMD_FUNCTION_SET);
 }
 

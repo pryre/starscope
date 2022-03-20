@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "pcd8544.h": "c",
+        "pcd8544_port.h": "c"
+    }
+}

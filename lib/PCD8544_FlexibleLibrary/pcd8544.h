@@ -112,7 +112,7 @@ void pcd8544_reset(void);
  * @note
  * This function also wakes PCD8544 out of power-down mode if it was selected.
  */
-void pcd8544_configure(pcd8544_config *config);
+void pcd8544_configure(const pcd8544_config *config);
 
 /**
  * @brief   Control the PCD8544 power mode.
