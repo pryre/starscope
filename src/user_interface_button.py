@@ -1,0 +1,29 @@
+from machine import Pin
+import time
+
+class UserInterfaceButton():
+    def __init__(self, monitor:Pin, edge=Pin.IRQ_RISING, debounce_min_us:int = 500) -> None:
+        self._debounce = time.ticks_cpu()
+        self._debounce_min_us = debounce_min_us
+        self._delta = False
+
+        self._monitor = monitor
+
+        self._monitor.irq(self._irq, edge)
+
+    def show_inputs(self):
+        print("mon: {}".format(self._monitor.value()))
+
+    def has_changed(self):
+        return self._delta
+
+    def get_delta(self):
+        delta = self._delta
+        self._delta = False
+
+        return delta
+
+    def _irq(self, pin:Pin):
+        if time.ticks_diff(time.ticks_cpu(), self._debounce) > self._debounce_min_us:
+            self._debounce = time.ticks_cpu()
+            self._delta = True
