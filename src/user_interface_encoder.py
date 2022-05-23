@@ -5,7 +5,7 @@ import micropython
 micropython.alloc_emergency_exception_buf(100)
 
 class UserInterfaceEncoder():
-    def __init__(self, monitor:Pin, direction:Pin, monitor_is_positive:bool = True, debounce_min_us:int = 500) -> None:
+    def __init__(self, monitor:Pin, direction:Pin, monitor_is_positive:bool = True, debounce_min_us:int = 3000) -> None:
         self._delta = 0
         self._direction_adjust = -1 if monitor_is_positive else 1
         self._debounce = time.ticks_cpu()
