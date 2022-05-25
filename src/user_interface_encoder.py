@@ -15,7 +15,11 @@ class UserInterfaceEncoder():
         self._monitor = monitor
         self._direction = direction
 
+    def begin(self):
         self._monitor.irq(self._irq, Pin.IRQ_FALLING | Pin.IRQ_RISING, hard=True)
+
+    def shutdown(self):
+        self._monitor.irq(trigger=0,handler=self._irq)
 
     def show_inputs(self):
         print("mon: {}; dir: {}".format(self._monitor.value(), self._direction.value()))

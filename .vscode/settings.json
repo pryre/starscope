@@ -9,9 +9,18 @@
         ".vscode/Pico-Stub/stubs"
     ],
     "cSpell.words": [
+        "Adafruit",
+        "alloc",
+        "bitmask",
         "deinit",
+        "EXTCOMIN",
         "micropython",
+        "mosi",
+        "sharpmem",
+        "spidev",
         "starscope",
-        "Startscope"
+        "Startscope",
+        "VCOM",
+        "WRITECMD"
     ]
 }

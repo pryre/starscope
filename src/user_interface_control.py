@@ -16,8 +16,23 @@ class UserInterfaceControl():
         self.data_position = 0
         self.zoom_position = 0
 
+    def begin(self):
+        self.dial_one.begin()
+        self.dial_two.begin()
+        self.dial_three.begin()
+
+        self.button_one.begin()
+        self.button_two.begin()
+        self.button_three.begin()
+
     def shutdown(self):
-        pass
+        self.dial_one.shutdown()
+        self.dial_two.shutdown()
+        self.dial_three.shutdown()
+
+        self.button_one.shutdown()
+        self.button_two.shutdown()
+        self.button_three.shutdown()
 
     def update(self):
         # self.dial_one.show_inputs()

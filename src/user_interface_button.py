@@ -6,10 +6,15 @@ class UserInterfaceButton():
         self._debounce = time.ticks_cpu()
         self._debounce_min_us = debounce_min_us
         self._delta = False
+        self._edge = edge
 
         self._monitor = monitor
 
-        self._monitor.irq(self._irq, edge)
+    def begin(self):
+        self._monitor.irq(self._irq, self._edge)
+
+    def shutdown(self):
+        self._monitor.irq(trigger=0,handler=self._irq)
 
     def show_inputs(self):
         print("mon: {}".format(self._monitor.value()))
