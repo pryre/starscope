@@ -1,6 +1,6 @@
 #XXX: Typing module not supported by micropython, comment below to not break things at runtime!
 # from typing import Iterator, MutableSet
-from machine import Pin, SPI, Timer
+from machine import Pin, SPI
 import time
 import random
 
@@ -100,96 +100,180 @@ class Size:
         self.x = x
         self.y = y
 
+    def __str__(self):
+        return "Size: [{},{}]".format(self.x, self.y)
+
 class SharpMemDisplay:
+    # Lookup table for byte values
+    # SET_BIT = bytearray([1, 2, 4, 8, 16, 32, 64, 128])
+
+    SHARPMEM_BIT_WRITECMD = 0x01 # 0x80 in LSB format
+    SHARPMEM_BIT_VCOM = 0x02     # 0x40 in LSB format
+    SHARPMEM_BIT_CLEAR = 0x04    # 0x20 in LSB format
+
     def __init__(self, spi_id:int, sck:Pin, mosi:Pin, cs:Pin, size:Size):
-        self.spi = SPI(spi_id)
+        self.spi = None
+        self._vcom = SharpMemDisplay.SHARPMEM_BIT_VCOM
+
+        self.spi_id = spi_id
         self.sck = sck
         self.mosi = mosi
         self.cs = cs
         self.cs.value(0)
+
         self.size = size
         self.lines = [bytearray(self.size.x//8) for i in range(self.size.y)]
-        self.changed:MutableSet[int] = set()
+        self.changed:MutableSet[int] = set() #type: ignore
 
-    def begin(self):
-        self.spi.init(10_000_000, sck=self.sck, mosi=self.mosi)
+    def TOGGLE_VCOM(self):
+        self._vcom = 0x00 if self._vcom else SharpMemDisplay.SHARPMEM_BIT_VCOM
+
+    def init(self):
+        self._vcom = SharpMemDisplay.SHARPMEM_BIT_VCOM
+        self.spi = SPI(self.spi_id, 2_000_00, firstbit=SPI.LSB, sck=self.sck, mosi=self.mosi)
+
+    def deinit(self):
+        if self.spi:
+            self.spi.deinit()
+
+    # Clears the entire screen with a hardware wipe
+    def clear_sync(self):
+        if self.spi is not None:
+            self.cs.value(1)
+
+            data = (self._vcom | SharpMemDisplay.SHARPMEM_BIT_CLEAR).to_bytes(1, 'big') + b'0x00'
+            self.spi.write(data)
+
+            self.TOGGLE_VCOM()
+            self.cs.value(0)
+
         self.clear()
 
-    def shutdown(self):
-        self.spi.deinit()
-
+    # Clears the internal buffer
     def clear(self):
-        self.set_all(0 for i in range(self.size.x * self.size.y // 8))
+        for i in range(self.size.y):
+            self.set_line_horizontal(i, False)
+
+        # for i in range(self.size.y):
+        #     self.set_line_horizontal(i, False)
+        # self.set_all(0 for i in range(self.size.x * self.size.y // 8))
+
+    def fill_pix(self):
+        for i in range(self.size.y):
+            self.set_line_horizontal(i, True)
+        # self.set_all(1 for i in range(self.size.x * self.size.y // 8))
 
     def get_pix(self, x, y):
         return bool(self.lines[y][x//8] & (1 << x%8))
 
     def set_pix(self, x:int, y:int, v:bool):
+        if (x < 0) or (x >= self.size.x) or (y < 0) or (y >= self.size.y):
+            raise IndexError("[{}, {}] is out of range of screen size: {}".format(x, y, self.size))
+
+        # Get appropriate index of byte in line
         byte = x//8
+        # Get a bitmask for the bit we want to set
         bitmask = 1 << x%8
+        # Get the line we want to edit in the y axis
         line_buf = self.lines[y]
-        line_buf[byte] &= ~bitmask
+        # Apply the bitmask to our byte in the x axis
         if v:
+            # On
             line_buf[byte] |= bitmask
+        else:
+            # Off
+            line_buf[byte] &= ~bitmask
+
+        # Mark the line to be sync'd later
         self.changed.add(y)
 
-    def set_line(self, line_ix, values):
-        b = self.lines[line_ix]
-        for i, v in enumerate(values):
-            b[i] = v
-        self.changed.add(line_ix)
+    def set_line_horizontal(self, y:int, v:bool):
+        steps = (self.size.x//8)
+        if v:
+            self.lines[y] = bytearray(steps)
+        else:
+            self.lines[y] = bytearray(b'0xFF' * steps)
 
-    def set_all(self, values:Iterator[int]):
-        lines = self.lines
-        # vi = iter(values)
-        xb = self.size.x // 8
-        for ix in range(len(self.lines)):
-            b = lines[ix]
-            for i, v in zip(range(xb), values): # type: ignore
-                b[i] = v
-            self.changed.add(ix)
+        # Mark the line to be sync'd later
+        self.changed.add(y)
+
+    def set_line_vertical(self, x:int, v:bool):
+        # Get appropriate index of byte in line
+        byte = x//8
+        # Get a bitmask for the bit we want to set
+        bitmask = 1 << x%8
+
+        for y, line_buf in enumerate(self.lines):
+            # Apply the bitmask to our byte in the x axis
+            if v:
+                # On
+                line_buf[byte] |= bitmask
+            else:
+                # Off
+                line_buf[byte] &= ~bitmask
+
+            # Mark the line to be sync'd later
+            self.changed.add(y)
 
     def sync(self):
-        # send = self.spi.send
-        # set_cs = self.cs.value
-        # vcom = get_vcom()
-        syncing = True
-        while syncing:
+        if self.spi is not None:
             self.cs.value(1)
-            time.sleep_us(6)          # tsSCS
-            try:
+
+            self.spi.write((self._vcom | self.SHARPMEM_BIT_WRITECMD).to_bytes(1, 'big'))
+            self.TOGGLE_VCOM()
+
+            while self.changed:
                 ix = self.changed.pop()
-            except KeyError:
-                syncing = False
-                # self.spi.write(0 | vcom)
-                self.spi.write(b'0x00')
-            else:
-                self.spi.write(b'0x01')
-                self.spi.write((ix+1).to_bytes(1, 'big'))
-                self.spi.write(self.lines[ix])
+                line_num = (ix+1).to_bytes(1, 'big')
+                self.spi.write(line_num + self.lines[ix] + b'0x00')
+
+            # Final byte
             self.spi.write(b'0x00')
-            time.sleep_us(2)          # th_SCS
             self.cs.value(0)
-            time.sleep_us(2)          # th_SCS_L
 
+    def demo_zebra(self):
+        self.clear()
 
-# A little demo: Brownian motion.
-def brown(screen:SharpMemDisplay):
-    screen.clear()
-    x = screen.size.x // 2
-    y = screen.size.y // 2
-    mls = 255 * screen.size.x // 8
-    on = True
-    step = 0
-    while step < 1000:
-        if on:
-            on = any(sum(line) < mls for line in screen.lines)
-        else:
-            on = all(sum(line) == 0 for line in screen.lines)
-        for i in range(1000):
-            x = (x + random.randint(0, 2) - 1) % screen.size.x
-            y = (y + random.randint(0, 2) - 1) % screen.size.y
-            screen.set_pix(x, y, on)
-            screen.sync()
+        state = True
+        for iy in range(self.size.y):
+            self.set_line_horizontal(iy, state)
+            state = not state
 
-        step = 1000
+        self.sync()
+
+    def demo_checker(self):
+        self.clear()
+
+        state = True
+        for iy in range(self.size.y):
+            self.set_line_horizontal(iy, state)
+            state = not state
+
+        state = True
+        for ix in range(self.size.x):
+            self.set_line_vertical(ix, state)
+            state = not state
+
+        self.sync()
+
+    def demo_brown(self):
+        self.clear()
+
+        x = self.size.x // 2
+        y = self.size.y // 2
+        mls = 255 * self.size.x // 8
+
+        on = True
+        step = 0
+        while step < 1000:
+            if on:
+                on = any(sum(line) < mls for line in self.lines)
+            else:
+                on = all(sum(line) == 0 for line in self.lines)
+            for i in range(1000):
+                x = (x + random.randint(0, 2) - 1) % self.size.x
+                y = (y + random.randint(0, 2) - 1) % self.size.y
+                self.set_pix(x, y, on)
+                self.sync()
+
+            step = 1000

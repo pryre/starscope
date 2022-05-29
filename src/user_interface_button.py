@@ -1,7 +1,9 @@
 from machine import Pin
 import time
 
-class UserInterfaceButton():
+from .user_interface_base import UserInterfaceBase
+
+class UserInterfaceButton(UserInterfaceBase):
     def __init__(self, monitor:Pin, edge=Pin.IRQ_RISING, debounce_min_us:int = 500) -> None:
         self._debounce = time.ticks_cpu()
         self._debounce_min_us = debounce_min_us
@@ -10,10 +12,10 @@ class UserInterfaceButton():
 
         self._monitor = monitor
 
-    def begin(self):
+    def init(self):
         self._monitor.irq(self._irq, self._edge)
 
-    def shutdown(self):
+    def deinit(self):
         self._monitor.irq(trigger=0,handler=self._irq)
 
     def show_inputs(self):

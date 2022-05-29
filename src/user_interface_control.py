@@ -1,62 +1,56 @@
 from machine import Pin
-from .user_interface_encoder import UserInterfaceEncoder
-from .user_interface_button import UserInterfaceButton
 
-class UserInterfaceControl():
-    def __init__(self) -> None:
-        self.dial_one = UserInterfaceEncoder(Pin(10, Pin.IN, Pin.PULL_UP), Pin(11, Pin.IN, Pin.PULL_UP))
-        self.dial_two = UserInterfaceEncoder(Pin(12, Pin.IN, Pin.PULL_UP), Pin(13, Pin.IN, Pin.PULL_UP))
-        self.dial_three = UserInterfaceEncoder(Pin(14, Pin.IN, Pin.PULL_UP), Pin(15, Pin.IN, Pin.PULL_UP))
+from .user_interface_base import UserInterfaceBase
+from .user_interface_display import UserInterfaceDisplay
 
-        self.button_one = UserInterfaceButton(Pin(18, Pin.IN, Pin.PULL_DOWN))
-        self.button_two = UserInterfaceButton(Pin(19, Pin.IN, Pin.PULL_DOWN))
-        self.button_three = UserInterfaceButton(Pin(20, Pin.IN, Pin.PULL_DOWN))
-
+class UserInterfaceControl(UserInterfaceBase):
+    def __init__(self, display:UserInterfaceDisplay) -> None:
+        self.screen = display
         self.menu_position = 0
         self.data_position = 0
         self.zoom_position = 0
 
-    def begin(self):
-        self.dial_one.begin()
-        self.dial_two.begin()
-        self.dial_three.begin()
+    def init(self):
+        pass
 
-        self.button_one.begin()
-        self.button_two.begin()
-        self.button_three.begin()
+    def deinit(self):
+        pass
 
-    def shutdown(self):
-        self.dial_one.shutdown()
-        self.dial_two.shutdown()
-        self.dial_three.shutdown()
+    def click_menu(self):
+        print('Menu click: {}'.format(self.menu_position))
 
-        self.button_one.shutdown()
-        self.button_two.shutdown()
-        self.button_three.shutdown()
+        print("Fill screen!")
+        self.screen.fill()
+
+    def click_data(self):
+        print('Data click: {}'.format(self.data_position))
+
+        print("Clear screen!")
+        self.screen.clear()
+
+    def click_zoom(self):
+        print('Zoom click: {}'.format(self.zoom_position))
+
+        print("Run screen demo!")
+        self.screen.run_demo()
+
+    def scroll_menu(self, delta:int):
+        self.menu_position += delta
+
+    def scroll_data(self, delta:int):
+        self.data_position += delta
+
+    def scroll_zoom(self, delta:int):
+        self.zoom_position += delta
 
     def update(self):
         # self.dial_one.show_inputs()
+        print('Menu item: {}'.format(self.menu_position))
+        print('Data item: {}'.format(self.data_position))
+        print('Zoom level: {}'.format(self.zoom_position))
 
-        if self.dial_one.has_changed():
-            self.menu_position += self.dial_one.get_delta()
-            print('Menu item: {}'.format(self.menu_position))
+        self.draw_screen()
 
-        if self.dial_two.has_changed():
-            self.data_position += self.dial_two.get_delta()
-            print('Data item: {}'.format(self.data_position))
-
-        if self.dial_three.has_changed():
-            self.zoom_position += self.dial_three.get_delta()
-            print('Zoom level: {}'.format(self.zoom_position))
-
-        if self.button_one.has_changed():
-            self.button_one.get_delta()
-            print('Menu click: {}'.format(self.menu_position))
-
-        if self.button_two.has_changed():
-            self.button_two.get_delta()
-            print('Data click: {}'.format(self.data_position))
-
-        if self.button_three.has_changed():
-            self.button_three.get_delta()
-            print('Zoom click: {}'.format(self.zoom_position))
+    def draw_screen(self):
+        # self.screen ...
+        pass

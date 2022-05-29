@@ -1,8 +1,11 @@
+import time
 from machine import Pin
+
+from .user_interface_base import UserInterfaceBase
 
 # micropython.alloc_emergency_exception_buf(100)
 
-from .drivers.sharp_mem_display import SharpMemDisplay, Size, brown
+from .drivers.sharp_mem_display import SharpMemDisplay, Size
 # screen = SharpMemDisplay(2, 'Y5', 96, 96)
 # screen.clear()
 # xdim = screen.xdim
@@ -22,10 +25,7 @@ from .drivers.sharp_mem_display import SharpMemDisplay, Size, brown
 #         screen.set_pix(x, y, on)
 #         screen.sync()
 
-
-
-
-class UserInterfaceDisplay():
+class UserInterfaceDisplay(UserInterfaceBase):
     def __init__(self) -> None:
         size = Size(400, 240)
         sck = Pin(2, Pin.OUT)
@@ -33,11 +33,29 @@ class UserInterfaceDisplay():
         cs = Pin(5, Pin.OUT)
         self.screen = SharpMemDisplay(0, sck, mosi, cs, size)
 
-    def begin(self):
-        self.screen.shutdown()
+    def init(self):
+        self.screen.init()
+        self.clear()
 
-    def shutdown(self):
-        self.screen.shutdown()
+    def deinit(self):
+        self.clear()
+        self.screen.deinit()
 
     def run_demo(self):
-        brown(self.screen)
+        # self.screen.demo_brown()
+        # time.sleep(2)
+        print("Demo zebra!")
+        self.screen.demo_zebra()
+        time.sleep(1)
+        print("Demo checker!")
+        self.screen.demo_checker()
+        time.sleep(1)
+        print("Demo done!")
+
+    def clear(self):
+        self.screen.clear_sync()
+        # self.screen.sync()
+
+    def fill(self):
+        self.screen.fill_pix()
+        self.screen.sync()

@@ -2,9 +2,11 @@ from machine import Pin
 import time
 import micropython
 
+from .user_interface_base import UserInterfaceBase
+
 micropython.alloc_emergency_exception_buf(100)
 
-class UserInterfaceEncoder():
+class UserInterfaceEncoder(UserInterfaceBase):
     def __init__(self, monitor:Pin, direction:Pin, monitor_is_positive:bool = True, debounce_min_us:int = 500) -> None:
         self._delta = 0
         self._rotary_state = 0
@@ -15,10 +17,10 @@ class UserInterfaceEncoder():
         self._monitor = monitor
         self._direction = direction
 
-    def begin(self):
+    def init(self):
         self._monitor.irq(self._irq, Pin.IRQ_FALLING | Pin.IRQ_RISING, hard=True)
 
-    def shutdown(self):
+    def deinit(self):
         self._monitor.irq(trigger=0,handler=self._irq)
 
     def show_inputs(self):
