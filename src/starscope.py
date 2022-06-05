@@ -1,4 +1,4 @@
-import time
+import time, gc
 from machine import Pin, Timer
 
 from .user_interface_base import UserInterfaceBase
@@ -127,4 +127,5 @@ class Starscope(UserInterfaceBase):
             self.button_three.get_delta()
             self.ui.click_zoom()
 
-        # self.ui.update()
+        # Force a garbage collection here if needed
+        gc.collect()

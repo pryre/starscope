@@ -1,5 +1,4 @@
-import time
-from machine import Pin
+from machine import Pin, Timer
 
 from .user_interface_base import UserInterfaceBase
 
@@ -32,24 +31,40 @@ class UserInterfaceDisplay(UserInterfaceBase):
         mosi = Pin(3, Pin.OUT)
         cs = Pin(5, Pin.OUT)
         self.screen = SharpMemDisplay(0, sck, mosi, cs, size)
+        self.timer = Timer()
+        self.demo_state = 0
 
     def init(self):
         self.screen.init()
         self.clear()
+        self.timer.init(freq=10, callback=self._update) #Need to sync the screen at 0.5Hz < f < 10Hz
+
+    def _update(self, event):
+        self.screen.sync()
 
     def deinit(self):
+        self.timer.deinit()
         self.clear()
         self.screen.deinit()
 
     def run_demo(self):
         # self.screen.demo_brown()
-        # time.sleep(2)
-        print("Demo zebra!")
-        self.screen.demo_zebra()
-        time.sleep(1)
-        print("Demo checker!")
-        self.screen.demo_checker()
-        time.sleep(1)
+        if self.demo_state == 0:
+            print("Demo zebra!")
+            self.screen.demo_zebra()
+        elif self.demo_state == 1:
+            print("Demo checker!")
+            self.screen.demo_checker()
+        # elif self.demo_state == 2:
+        #     print("Demo brown!")
+        #     self.screen.demo_brown()
+
+        self.demo_state += 1
+        if self.demo_state >= 2:
+            self.demo_state = 0
+        # print("Demo checker!")
+        # self.screen.demo_checker()
+        # time.sleep(1)
         print("Demo done!")
 
     def clear(self):
@@ -57,5 +72,5 @@ class UserInterfaceDisplay(UserInterfaceBase):
         # self.screen.sync()
 
     def fill(self):
-        self.screen.fill_pix()
-        self.screen.sync()
+        self.screen.fill()
+        # self.screen.sync()
