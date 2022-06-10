@@ -128,7 +128,8 @@ class SharpMemDisplay:
     SHARPMEM_BIT_CLEAR = 0x04    # 0x20 in LSB format
 
     # XXX: By default all of the pixel operations are inverted (0x01 is off)
-    SHARPMEM_DUMMY_BYTE = bytes([0])
+    SHARPMEM_DUMMY_BYTE = 0
+
     SHARPMEM_PIXEL_BYTE_OFF = 0xFF
     SHARPMEM_PIXEL_BYTE_ON = 0x00
 
@@ -157,26 +158,16 @@ class SharpMemDisplay:
         if self.spi:
             self.spi.deinit()
 
-    def flip_bytes(self, data:bytes):
-        return bytes(SharpMemDisplay.BIT_FLIP[d] for d in data)
+    # def _flip_bytes(self, data:bytes):
+    #     for d in data:
+    #         yield SharpMemDisplay.BIT_FLIP[d]
 
-    def write(self, data:bytes, is_flipped=True):
+    def _write(self, data:Iterator[int]): #type: ignore
         if self.spi is not None:
             # out = data if not is_flipped else self.flip_bytes(data)
             # print(("Flipped: " if is_flipped else "As is: ") + str(len(out)) + " | " + str(out))
-            self.spi.write(data if not is_flipped else self.flip_bytes(data))
-
-    # Clears the entire screen with a hardware wipe
-    def clear_sync(self):
-        self.cs.value(1)
-
-        data = bytes([self._vcom | SharpMemDisplay.SHARPMEM_BIT_CLEAR]) + SharpMemDisplay.SHARPMEM_DUMMY_BYTE
-        self.write(data)
-
-        self.TOGGLE_VCOM()
-        self.cs.value(0)
-
-        self.clear(False)
+            # self.spi.write(data if not is_flipped else self.flip_bytes(data))
+            self.spi.write(bytes(data))
 
     # Clears the internal buffer
     def clear(self, set_changed:bool = True):
@@ -219,6 +210,8 @@ class SharpMemDisplay:
 
     def set_line_horizontal(self, y:int, v:bool, set_changed:bool = True):
         steps = (self.size.x//8)
+        # for i in self.lines[y]:
+        #     i = SharpMemDisplay.SHARPMEM_PIXEL_BYTE_ON if v else SharpMemDisplay.SHARPMEM_PIXEL_BYTE_OFF
         if v:
             self.lines[y] = [SharpMemDisplay.SHARPMEM_PIXEL_BYTE_ON] * steps
         else:
@@ -247,27 +240,54 @@ class SharpMemDisplay:
             if set_changed:
                 self.changed.add(y)
 
-    def sync(self):
-        self.cs.value(1)
+    def _clear_sync_generator(self):
+        yield SharpMemDisplay.BIT_FLIP[self._vcom | SharpMemDisplay.SHARPMEM_BIT_CLEAR]
+        yield SharpMemDisplay.BIT_FLIP[SharpMemDisplay.SHARPMEM_DUMMY_BYTE]
 
-        # print("Head")
-        self.write(bytes([self._vcom | self.SHARPMEM_BIT_WRITECMD]))
-        self.TOGGLE_VCOM()
-
-        # out = bytearray()
+    def _sync_generator(self):
+        yield SharpMemDisplay.BIT_FLIP[self._vcom | self.SHARPMEM_BIT_WRITECMD]
 
         while self.changed:
             ix = self.changed.pop()
             # print("Line: " + str(ix))
-            self.write(bytes([ix+1]))
-            self.write(bytes(self.lines[ix]))
-            self.write(SharpMemDisplay.SHARPMEM_DUMMY_BYTE)
+
+            # for i in bytes([ix+1]):
+            #     yield i
+            yield SharpMemDisplay.BIT_FLIP[ix + 1]
+
+            for i in self.lines[ix]:
+                yield SharpMemDisplay.BIT_FLIP[i]
+
+            yield SharpMemDisplay.BIT_FLIP[SharpMemDisplay.SHARPMEM_DUMMY_BYTE]
 
         # Final byte
         # print("Tail")
-        self.write(SharpMemDisplay.SHARPMEM_DUMMY_BYTE)
+        yield SharpMemDisplay.BIT_FLIP[SharpMemDisplay.SHARPMEM_DUMMY_BYTE]
+
+    # Clears the entire screen with a hardware wipe
+    def clear_sync(self):
+        self.cs.value(1)
+
+        # data = bytes([self._vcom | SharpMemDisplay.SHARPMEM_BIT_CLEAR, SharpMemDisplay.SHARPMEM_DUMMY_BYTE])
+        data = self._clear_sync_generator()
+        self._write(data)
+
+        self.TOGGLE_VCOM()
+        self.cs.value(0)
+
+        self.clear(False)
+
+    def sync(self):
+        self.cs.value(1)
+        sync_data = self._sync_generator()
+        # print("Head")
+        self._write(sync_data)
+
+        # out = bytearray()
+
         # out += b'0x00'
         # self.write(out)
+        self.TOGGLE_VCOM()
         self.cs.value(0)
 
     def demo_zebra(self):

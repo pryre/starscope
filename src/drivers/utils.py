@@ -1,11 +1,17 @@
 import time
+#from types import FunctionType
+import time
 
-def timed_function(f, *args, **kwargs):
-    func_name = str(f).split(' ')[1]
-    def new_func(*args, **kwargs):
-        t = time.ticks_us()
-        result = f(*args, **kwargs)
-        delta = time.ticks_diff(time.ticks_us(), t)
-        print('Function {} Time = {:6.3f}ms'.format(func_name, delta/1000))
-        return result
-    return new_func
+class benchmark(object):
+    def __init__(self, msg:str):
+        # self.fmt = msg + ": {}us"
+        self.msg = msg
+
+    def __enter__(self):
+        self.start = time.ticks_cpu()
+        return self
+
+    def __exit__(self, *args):
+        t = time.ticks_cpu() - self.start
+        print(f'{self.msg}: {t}us')
+        self.time = t

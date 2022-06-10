@@ -1,5 +1,7 @@
 from machine import Pin, Timer
 
+# from .drivers.utils import benchmark
+
 from .user_interface_base import UserInterfaceBase
 
 # micropython.alloc_emergency_exception_buf(100)
@@ -40,6 +42,7 @@ class UserInterfaceDisplay(UserInterfaceBase):
         self.timer.init(freq=10, callback=self._update) #Need to sync the screen at 0.5Hz < f < 10Hz
 
     def _update(self, event):
+        # with benchmark("sync"):
         self.screen.sync()
 
     def deinit(self):
