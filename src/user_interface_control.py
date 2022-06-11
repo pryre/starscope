@@ -1,9 +1,7 @@
-from machine import Pin
-
-from .user_interface_base import UserInterfaceBase
+from .tools_stateful_system import StatefulSystem
 from .user_interface_display import UserInterfaceDisplay
 
-class UserInterfaceControl(UserInterfaceBase):
+class UserInterfaceControl(StatefulSystem):
     def __init__(self, display:UserInterfaceDisplay) -> None:
         self.screen = display
         self.menu_position = 0
@@ -17,19 +15,19 @@ class UserInterfaceControl(UserInterfaceBase):
         pass
 
     def click_menu(self):
-        print('Menu click: {}'.format(self.menu_position))
+        print(f'Menu click: {self.menu_position}')
 
         print("Fill screen!")
         self.screen.fill()
 
     def click_data(self):
-        print('Data click: {}'.format(self.data_position))
+        print(f'Data click: {self.data_position}')
 
         print("Clear screen!")
         self.screen.clear()
 
     def click_zoom(self):
-        print('Zoom click: {}'.format(self.zoom_position))
+        print(f'Zoom click: {self.zoom_position}')
 
         print("Run screen demo!")
         self.screen.run_demo()
@@ -45,9 +43,9 @@ class UserInterfaceControl(UserInterfaceBase):
 
     def update(self):
         # self.dial_one.show_inputs()
-        print('Menu item: {}'.format(self.menu_position))
-        print('Data item: {}'.format(self.data_position))
-        print('Zoom level: {}'.format(self.zoom_position))
+        print(f'Menu item: {self.menu_position}')
+        print(f'Data item: {self.data_position}')
+        print(f'Zoom level: {self.zoom_position}')
 
         self.draw_screen()
 

@@ -1,16 +1,22 @@
 import time, gc
 from machine import Pin, Timer
 
-from .user_interface_base import UserInterfaceBase
+from src.drivers.utils import Size
+
+from .tools_stateful_system import StatefulSystem
 from .user_interface_heartbeat import UserInterfaceHeartbeat
 from .user_interface_display import UserInterfaceDisplay
 from .user_interface_control import UserInterfaceControl
 from .user_interface_encoder import UserInterfaceEncoder
 from .user_interface_button import UserInterfaceButton
+from .sensors import Sensors
 
-class Starscope(UserInterfaceBase):
+class Starscope(StatefulSystem):
     def __init__(self) -> None:
         self._stop = False
+        self.line_feed = Size()
+        self.last_pos = 0
+        self.printed_static = False
 
         self.led_hb = UserInterfaceHeartbeat(Pin(25, Pin.OUT))
 
@@ -25,9 +31,11 @@ class Starscope(UserInterfaceBase):
         self.screen = UserInterfaceDisplay()
         self.ui = UserInterfaceControl(self.screen)
 
+        self.sensors = Sensors(Pin(8), Pin(9))
+
         # List of internal objects to be initialized in this order
         # and deinit'd in reverse order
-        self._controls:list[UserInterfaceBase] = [
+        self._controls:list[StatefulSystem] = [
             self.led_hb,
             self.dial_one,
             self.dial_two,
@@ -36,7 +44,8 @@ class Starscope(UserInterfaceBase):
             self.button_two,
             self.button_three,
             self.screen,
-            self.ui
+            self.ui,
+            self.sensors,
         ]
 
         self.timer = Timer()
@@ -72,32 +81,6 @@ class Starscope(UserInterfaceBase):
             if control:
                 control.deinit()
 
-        # self.led_hb.init()
-
-        # if self.dial_one:
-        #     self.dial_one.deinit()
-
-        # if self.dial_two:
-        #     self.dial_two.deinit()
-
-        # if self.dial_three:
-        #     self.dial_three.deinit()
-
-        # if self.button_one:
-        #     self.button_one.deinit()
-
-        # if self.button_two:
-        #     self.button_two.deinit()
-
-        # if self.button_three:
-        #     self.button_three.deinit()
-
-        # if self.screen:
-        #     self.screen.deinit()
-
-        # if self.ui:
-        #     self.ui.deinit()
-
     def stop(self):
         self._stop = True
 
@@ -126,6 +109,39 @@ class Starscope(UserInterfaceBase):
         if self.button_three.has_changed():
             self.button_three.get_delta()
             self.ui.click_zoom()
+
+        # print(motion.acceleration)
+        # print(motion.rates)
+        # print(motion.temperature)
+
+        if self.last_pos != self.ui.data_position:
+            self.screen.clear()
+            self.last_pos = self.ui.data_position
+            self.printed_static = False
+
+        if self.ui.data_position < 0:
+            self.line_feed = self.screen.print('See you space cowboy...', self.line_feed)
+        elif self.ui.data_position > 0:
+            if not self.printed_static:
+                loc = Size(self.screen.px_from_column(0), self.screen.px_from_line(-4))
+                loc = self.screen.print("Time:", loc)
+                loc = self.screen.print("Accel:", loc)
+                loc = self.screen.print("Gyro:", loc)
+                loc = self.screen.print("T.Int:", loc)
+
+            motion = self.sensors.get_motion_data()
+            loc = Size(self.screen.px_from_column(7), self.screen.px_from_line(-4))
+            loc = self.screen.print(time.ticks_cpu(), loc)
+            loc = self.screen.print(motion.acceleration, loc)
+            loc = self.screen.print(motion.rates, loc)
+            loc = self.screen.print(motion.temperature, loc)
+        else:
+            if not self.printed_static:
+                loc = Size(44, 84)
+                loc = self.screen.print("▛▀▀▀▀▀▀▀▀▀▀▀▜", loc, scaling=3)
+                loc = self.screen.print("▌ Starscope ▐", loc, scaling=3)
+                loc = self.screen.print("▙▄▄▄▄▄▄▄▄▄▄▄▟", loc, scaling=3)
+            self.printed_static = True
 
         # Force a garbage collection here if needed
         gc.collect()

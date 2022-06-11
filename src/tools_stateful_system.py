@@ -1,4 +1,4 @@
-class UserInterfaceBase():
+class StatefulSystem():
     def init(self):
         raise RuntimeError("Parent class does not implement an init method")
 

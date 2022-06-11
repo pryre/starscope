@@ -3,6 +3,8 @@
 from machine import Pin, SPI
 import random
 
+from .utils import Size
+
 #XXX: https://github.com/pramasoul/micropython-SHARP_Memory_Display
 
 # class HardwareVCOM:
@@ -94,14 +96,6 @@ import random
 #   spidev->endTransaction();
 # }
 
-class Size:
-    def __init__(self, x:int=0, y:int=0) -> None:
-        self.x = x
-        self.y = y
-
-    def __str__(self):
-        return "Size: [{},{}]".format(self.x, self.y)
-
 class SharpMemDisplay:
     # Lookup table for byte values in LSB format
     BIT_FLIP = bytes([
@@ -144,7 +138,7 @@ class SharpMemDisplay:
         self.cs.value(0)
 
         self.size = size
-        self.lines = [[0xFF]*(self.size.x//8) for i in range(self.size.y)]
+        self.lines = [[SharpMemDisplay.SHARPMEM_PIXEL_BYTE_OFF]*(self.size.x//8) for i in range(self.size.y)]
         self.changed:MutableSet[int] = set() #type: ignore
 
     def TOGGLE_VCOM(self):
@@ -209,13 +203,15 @@ class SharpMemDisplay:
             self.changed.add(y)
 
     def set_line_horizontal(self, y:int, v:bool, set_changed:bool = True):
-        steps = (self.size.x//8)
+        # steps = (self.size.x//8)
         # for i in self.lines[y]:
         #     i = SharpMemDisplay.SHARPMEM_PIXEL_BYTE_ON if v else SharpMemDisplay.SHARPMEM_PIXEL_BYTE_OFF
         if v:
-            self.lines[y] = [SharpMemDisplay.SHARPMEM_PIXEL_BYTE_ON] * steps
+            for i in range(len(self.lines[y])):
+                self.lines[y][i] = SharpMemDisplay.SHARPMEM_PIXEL_BYTE_ON
         else:
-            self.lines[y] = [SharpMemDisplay.SHARPMEM_PIXEL_BYTE_OFF] * steps
+            for i in range(len(self.lines[y])):
+                self.lines[y][i] = SharpMemDisplay.SHARPMEM_PIXEL_BYTE_OFF
 
         # Mark the line to be sync'd later
         if set_changed:

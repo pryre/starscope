@@ -1,9 +1,9 @@
 
 from machine import Pin, Timer
 
-from .user_interface_base import UserInterfaceBase
+from .tools_stateful_system import StatefulSystem
 
-class UserInterfaceHeartbeat(UserInterfaceBase):
+class UserInterfaceHeartbeat(StatefulSystem):
     def __init__(self, led:Pin, interval_ms:int = 500) -> None:
         self.timer = Timer()
         self.led = led

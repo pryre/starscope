@@ -13,14 +13,18 @@
         "alloc",
         "bitmask",
         "deinit",
+        "DLPF",
         "EXTCOMIN",
+        "MGMT",
         "micropython",
         "mosi",
+        "readfrom",
         "sharpmem",
         "spidev",
         "starscope",
         "Startscope",
         "VCOM",
-        "WRITECMD"
+        "WRITECMD",
+        "writeto"
     ]
 }

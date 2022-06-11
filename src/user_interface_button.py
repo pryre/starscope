@@ -1,9 +1,9 @@
 from machine import Pin
 import time
 
-from .user_interface_base import UserInterfaceBase
+from .tools_stateful_system import StatefulSystem
 
-class UserInterfaceButton(UserInterfaceBase):
+class UserInterfaceButton(StatefulSystem):
     def __init__(self, monitor:Pin, edge=Pin.IRQ_RISING, debounce_min_us:int = 500) -> None:
         self._debounce = time.ticks_cpu()
         self._debounce_min_us = debounce_min_us
