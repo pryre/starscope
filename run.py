@@ -1,4 +1,4 @@
-from src.starscope import Starscope
+from src.starscope.starscope import Starscope
 
 def debug():
     starscope = Starscope()

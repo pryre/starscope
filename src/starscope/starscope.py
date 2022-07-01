@@ -1,7 +1,7 @@
 import time, gc
 from machine import Pin, Timer
 
-from src.drivers.utils import Size
+from .drivers.utils import Size
 
 from .tools_stateful_system import StatefulSystem
 from .user_interface_heartbeat import UserInterfaceHeartbeat
