@@ -3,6 +3,17 @@ A low-cost solution for star-finding and ranging.
 
 ## Setup
 
+### Dependencies (Arch Linux - fish)
+Install a terminal mu
+```
+pikaur -S pico-sdk
+
+set -x PICO_SDK_PATH /usr/share/pico-sdk
+pikaur -S picotool
+
+# optional (terminal emulator)
+pikaur -S picocom
+```
 
 ### Udev rule for non-sudo access and upload for Linux
 Make sure your user is in the `dialout` group:
