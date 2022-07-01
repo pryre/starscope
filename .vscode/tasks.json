@@ -1,0 +1,58 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "cmake_build_default",
+            "command": "build",
+            "type": "cmake"
+        },
+        {
+            "label": "upload",
+            "command": "picotool",
+            "args": [
+                "load",
+                "./build/starscope.uf2"
+            ],
+            "type": "shell",
+            "dependsOn": [
+                "cmake_build_default"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "upload_and_run",
+            "command": "picotool",
+            "args": [
+                "reboot"
+            ],
+            "type": "shell",
+            "dependsOn": [
+                "upload"
+            ],
+            "problemMatcher": []
+        },
+        {
+            "label": "_short_wait",
+            "command": "sleep",
+            "args": [
+                "2"
+            ],
+            "type": "shell"
+        },
+        {
+            "label": "upload_and_monitor",
+            "command": "picocom",
+            "args": [
+                "-b",
+                "115200",
+                "/dev/serial/by-id/usb-Raspberry_Pi_Pico_E660D4A0A7252532-if00"
+            ],
+            "type": "shell",
+            "dependsOn": [
+                "upload_and_run",
+                "_short_wait"
+            ],
+            "problemMatcher": []
+        }
+    ]
+}

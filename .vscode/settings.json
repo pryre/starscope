@@ -15,16 +15,24 @@
         "deinit",
         "DLPF",
         "EXTCOMIN",
+        "gpio",
         "MGMT",
         "micropython",
         "mosi",
+        "pico",
+        "picotool",
         "readfrom",
         "sharpmem",
         "spidev",
         "starscope",
         "Startscope",
+        "stdlib",
         "VCOM",
         "WRITECMD",
         "writeto"
+    ],
+    "cmake.sourceDirectory": "${workspaceFolder}/src",
+    "C_Cpp.commentContinuationPatterns": [
+        "/**"
     ]
 }

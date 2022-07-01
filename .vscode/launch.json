@@ -1,0 +1,11 @@
+{
+    "configurations": [
+        {
+            "name": "Debug",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceRoot}/build/starscope.elf",
+            "preLaunchTask": "upload",
+        }
+    ]
+}
