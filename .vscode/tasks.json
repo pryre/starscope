@@ -11,7 +11,7 @@
             "command": "picotool",
             "args": [
                 "load",
-                "./build/starscope.uf2"
+                "./build/starscope_pico.uf2"
             ],
             "type": "shell",
             "dependsOn": [
@@ -35,7 +35,7 @@
             "label": "_short_wait",
             "command": "sleep",
             "args": [
-                "2"
+                "1"
             ],
             "type": "shell"
         },
@@ -48,6 +48,7 @@
                 "/dev/serial/by-id/usb-Raspberry_Pi_Pico_E660D4A0A7252532-if00"
             ],
             "type": "shell",
+            "dependsOrder": "sequence",
             "dependsOn": [
                 "upload_and_run",
                 "_short_wait"
