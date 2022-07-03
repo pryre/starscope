@@ -1,56 +1,8 @@
 #include "starscope/drivers/mpu6050.hpp"
 #include <bitset>
 
-namespace Starscope::Drivers::MPU6050 {
-Data::Data(float gyro_scaling = 1.0, float accel_scaling = 1.0) :
-    acceleration(Utils::Vector3()),
-    rates(Utils::Vector3()),
-    temperature(0),
-    gyro_scaling(gyro_scaling),
-    accel_scaling(accel_scaling) {
-}
-
-
-//Updates the internal data from a data packet
-bool Data::from_raw_data(const std::span<const std::byte, LEN_RAW_VALUES> &data) {
-    std::span<const std::byte> raw = data.subspan(0, data.size() - 2);
-
-    acceleration = Utils::Vector3(
-        data_decoder(raw) * accel_scaling,
-        data_decoder(raw) * accel_scaling,
-        data_decoder(raw) * accel_scaling
-    );
-
-    temperature = data_decoder(raw) * SCALE_TEMP_MUL + SCALE_TEMP_OFFSET;
-
-    rates = Utils::Vector3(
-        data_decoder(raw) * gyro_scaling,
-        data_decoder(raw) * gyro_scaling,
-        data_decoder(raw) * gyro_scaling
-    );
-
-    return true;
-}
-
-uint16_t Data::bytes_to_value(const std::byte first_byte, const std::byte second_byte) const {
-    return  !(bool)(first_byte & VAL_INVERT_RESPONSE) ?
-        ((uint8_t)first_byte << 8) | (uint8_t)second_byte :
-        -(((uint8_t)flip(first_byte) << 8) | ((uint8_t)flip(second_byte)) + 1);
-}
-
-uint16_t Data::data_decoder(std::span<const std::byte> &data) const {
-        uint16_t value = 0;
-
-        if(data.size() >= 2) {
-            value = bytes_to_value(data[0], data[1]);
-            //Reduce the span size (consume)
-            data = data.subspan(2, data.size() - 2);
-        } else {
-            data = std::span<const std::byte>{};
-        }
-
-        return value;
-}
+namespace Starscope::Drivers::MPU6050
+{
 
 Driver::Driver(i2c_inst_t* i2c, std::byte addr) :
     _i2c(i2c),
@@ -59,25 +11,63 @@ Driver::Driver(i2c_inst_t* i2c, std::byte addr) :
     _scale_gyro(1.0) {
 }
 
+//Updates the internal data from a data packet
+MPU6060Values Driver::get_values_from_raw_data(const std::span<const std::byte, LEN_RAW_VALUES> &data) const {
+    std::span<const std::byte> raw = data.subspan(0, data.size());
+
+    MPU6060Values values = MPU6060Values();
+    values.acceleration.x = data_decoder(raw) * _scale_accel;
+    values.acceleration.y = data_decoder(raw) * _scale_accel;
+    values.acceleration.z = data_decoder(raw) * _scale_accel;
+
+    values.temperature = data_decoder(raw) * SCALE_TEMP_MUL + SCALE_TEMP_OFFSET;
+
+    values.rates.x = data_decoder(raw) * _scale_gyro;
+    values.rates.y = data_decoder(raw) * _scale_gyro;
+    values.rates.z = data_decoder(raw) * _scale_gyro;
+
+    return values;
+}
+
+int16_t Driver::data_decoder(std::span<const std::byte> &data) const {
+        int16_t value = 0;
+
+        if(data.size() >= 2) {
+            //Convert bytes to signed int
+            value = ((uint8_t)data[0] << 8) | (uint8_t)data[1];
+            //Reduce the span size (consume)
+            data = data.subspan(2, data.size() - 2);
+        } else {
+            // printf("End of buffer reached!");
+            data = std::span<const std::byte>{};
+        }
+
+        return value;
+}
+
 std::array<std::byte, LEN_RAW_VALUES> Driver::get_raw_values() const {
     std::array<std::byte, LEN_RAW_VALUES> data;
-    int ret;
-    ret = i2c_read_blocking(_i2c, (uint8_t)_addr, static_cast<uint8_t*>(data.data()), LEN_RAW_VALUES, false);
-
+    //Write the memory address to start reading data from
+    i2c_write_blocking(_i2c, (uint8_t)_addr, (uint8_t*)&REG_RAW_VALUES, 1, true);
+    i2c_read_blocking(_i2c, (uint8_t)_addr, (uint8_t*)data.data(), LEN_RAW_VALUES, false);
+    // for(const auto d : data)
+    //     printf("%x\n", (uint8_t)d);
     return data;
 }
 
-Data Driver::get_values() const {
-    //TODO: Stuff
+MPU6060Values Driver::get_values() const {
+    return get_values_from_raw_data(get_raw_values());
 }
 
 bool Driver::_init() {
     write(REG_PWR_MGMT_1, VAL_PWR_MGMT_1_RUN);
     write(REG_CONFIG, VAL_CONFIG_EXT_SYNC_SET_NONE | VAL_CONFIG_DLPF_CFG_A10HZ_G10HZ);
     set_scaling(); //Set to default scaling
+
+    return true;
 }
 
-void Driver::set_scaling(const ACCEL_RANGE accel_scaling = ACCEL_RANGE::A_4G, const GYRO_RANGE gyro_scaling = GYRO_RANGE::G_500_DPS) {
+void Driver::set_scaling(const ACCEL_RANGE accel_scaling, const GYRO_RANGE gyro_scaling) {
     switch(accel_scaling) {
         case ACCEL_RANGE::A_2G: {
             write(REG_ACCEL_CONFIG, VAL_ACCEL_CONFIG_RANGE_2_G);
@@ -129,54 +119,8 @@ void Driver::_deinit() {
 }
 
 void Driver::write(const std::byte mem_addr, const std::byte data) const {
-    const uint8_t src[2] = {(uint8_t)mem_addr, (uint8_t)data};
-    i2c_write_blocking(_i2c, (uint8_t)_addr, src, 2, false);
+    const std::byte src[LEN_REG_WRITE] = {mem_addr, data};
+    i2c_write_blocking(_i2c, (uint8_t)_addr, (uint8_t*)src, LEN_REG_WRITE, false);
 }
 
 }
-
-class MPU6050():
-    def __init__(self, id:int, scl:Pin, sda:Pin, addr=0x68):
-        self.i2c = I2C(id, scl=scl, sda=sda, freq=400000)
-        self.addr = addr
-        self.scale_accel = 1.0
-        self.scale_gyro = 1.0
-        self._scale_deg_to_rad = math.pi / 180
-        self._scale_g_to_ms2 = 9.80665
-
-    def init(self):
-        self._write([REG_PWR_MGMT_1, VAL_PWR_MGMT_1_RUN])
-        self._write([REG_CONFIG, VAL_CONFIG_EXT_SYNC_SET_NONE | VAL_CONFIG_DLPF_CFG_A10HZ_G10HZ])
-        self._write([REG_GYRO_CONFIG, VAL_GYRO_CONFIG_RANGE_500_DPS])
-        self._write([REG_ACCEL_CONFIG, VAL_ACCEL_CONFIG_RANGE_4_G])
-
-        self.scale_gyro = self._scale_deg_to_rad / SCALE_GYRO_CONFIG_RANGE_500_DPS
-        self.scale_accel = self._scale_g_to_ms2 / SCALE_ACCEL_CONFIG_RANGE_4_G
-
-    def deinit(self):
-        # self.i2c.deinit()
-        pass
-
-    def _write(self, data:list[int]):
-        # self.i2c.start()
-        self.i2c.writeto(self.addr, bytes(data))
-        # self.i2c.stop()
-
-    def _read(self, mem_addr:int, count:int):
-        # self.i2c.start()
-        a = self.i2c.readfrom_mem(self.addr, mem_addr, count)
-        # self.i2c.stop()
-        return a
-
-    def get_raw_values(self):
-        return self._read(REG_RAW_VALUES, LEN_RAW_VALUES)
-
-    # def get_ints(self):
-    #     b = self.get_raw_values()
-    #     c = []
-    #     for i in b:
-    #         c.append(i)
-    #     return c
-
-    def get_values(self):
-        return MPU6050Data(self.get_raw_values(), self.scale_gyro, self.scale_accel)

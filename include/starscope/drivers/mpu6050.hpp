@@ -13,6 +13,7 @@ namespace Starscope::Drivers::MPU6050 {
 
 //https://invensense.tdk.com/wp-content/uploads/2015/02/MPU-6000-Register-Map1.pdf
 const std::byte DEFAULT_ADDRESS = std::byte{0x68};
+const size_t LEN_REG_WRITE = 2;
 
 const std::byte REG_PWR_MGMT_1 = std::byte{0x6B};
 const std::byte VAL_PWR_MGMT_1_RUN = std::byte{0x00};
@@ -35,7 +36,7 @@ const std::byte VAL_CONFIG_DLPF_CFG_A10HZ_G10HZ = std::byte{0x05};
 const std::byte VAL_CONFIG_DLPF_CFG_A5HZ_G5HZ = std::byte{0x06};
 
 const std::byte REG_RAW_VALUES = std::byte{0x3B};
-const unsigned int LEN_RAW_VALUES = 14;
+const size_t LEN_RAW_VALUES = 14;
 const std::byte VAL_INVERT_RESPONSE = std::byte{0x80};
 
 const std::byte REG_GYRO_CONFIG = std::byte{0x1B};
@@ -81,27 +82,13 @@ typedef enum {
     A_16G
 } ACCEL_RANGE;
 
-class Data {
-    public:
-    Utils::Vector3 acceleration;
-    Utils::Vector3 rates;
-    float temperature;
-    float gyro_scaling;
-    float accel_scaling;
-
-    public:
-    Data(float gyro_scaling = 1.0, float accel_scaling = 1.0);
-
-    //Updates the internal data from a data packet
-    bool from_raw_data(const std::span<const std::byte, LEN_RAW_VALUES> &data);
-
-    private:
-    uint16_t bytes_to_value(const std::byte first_byte, const std::byte second_byte) const;
-    //Takes a span of data, consumes the next set of bytes, returns the decoded packet
-    uint16_t data_decoder(std::span<const std::byte> &data) const;
+struct MPU6060Values {
+    Utils::Vector3 acceleration = Utils::Vector3();
+    Utils::Vector3 rates = Utils::Vector3();
+    float temperature = 0.0;
 };
 
-class Driver : Utils::StatefulSystem {
+class Driver : public Utils::StatefulSystem {
     private:
     i2c_inst_t* _i2c;
     std::byte _addr;
@@ -114,7 +101,11 @@ class Driver : Utils::StatefulSystem {
     void set_scaling(const ACCEL_RANGE accel_scaling = ACCEL_RANGE::A_4G, const GYRO_RANGE gyro_scaling = GYRO_RANGE::G_500_DPS);
 
     std::array<std::byte, LEN_RAW_VALUES> get_raw_values() const;
-    Data get_values() const;
+    MPU6060Values get_values() const;
+    MPU6060Values get_values_from_raw_data(const std::span<const std::byte, LEN_RAW_VALUES> &data) const;
+
+    //Takes a span of data, consumes the next set of bytes, returns the decoded packet
+    int16_t data_decoder(std::span<const std::byte> &data) const;
 
     private:
     bool _init();

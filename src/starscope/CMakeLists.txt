@@ -15,14 +15,18 @@ target_link_libraries(${_NODE_NAME} PRIVATE
     pico_stdlib
     hardware_i2c
     ${_DRIVERS_UTILS_NAME}
+    ${_DRIVERS_MPU6050_NAME}
 )
 
 if (TARGET tinyusb_device)
         # enable usb output, disable uart output
         pico_enable_stdio_usb(${_NODE_NAME} 1)
         pico_enable_stdio_uart(${_NODE_NAME} 0)
+        # target_compile_definitions(${_NODE_NAME} PRIVATE
+        #     PICO_STDIO_USB_CONNECT_WAIT_TIMEOUT_MS=5000
+        # )
 elseif(PICO_ON_DEVICE)
-    message(WARNING "not building hello_usb because TinyUSB submodule is not initialized in the SDK")
+    message(WARNING "using uart output because TinyUSB submodule is not initialized in the SDK")
 endif()
 
 # create map/bin/hex file etc.

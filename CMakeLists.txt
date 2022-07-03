@@ -6,6 +6,7 @@ set(ENV{PICO_SDK_PATH} /usr/share/pico-sdk)
 # set(ENV{PICO_SDK_FETCH_FROM_GIT} FALSE)
 include($ENV{PICO_SDK_PATH}/external/pico_sdk_import.cmake)
 
+
 project(${_PROJECT_NAME} C CXX ASM)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 20)

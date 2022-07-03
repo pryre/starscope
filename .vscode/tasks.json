@@ -4,7 +4,8 @@
         {
             "label": "cmake_build_default",
             "command": "build",
-            "type": "cmake"
+            "type": "cmake",
+            "problemMatcher": "$gcc"
         },
         {
             "label": "upload",
@@ -14,10 +15,13 @@
                 "./build/starscope_pico.uf2"
             ],
             "type": "shell",
+            "dependsOrder": "sequence",
             "dependsOn": [
                 "cmake_build_default"
             ],
-            "problemMatcher": []
+            "problemMatcher": [
+                "$gcc"
+            ]
         },
         {
             "label": "upload_and_run",
@@ -26,10 +30,13 @@
                 "reboot"
             ],
             "type": "shell",
+            "dependsOrder": "sequence",
             "dependsOn": [
                 "upload"
             ],
-            "problemMatcher": []
+            "problemMatcher": [
+                "$gcc"
+            ]
         },
         {
             "label": "_short_wait",
@@ -53,7 +60,9 @@
                 "upload_and_run",
                 "_short_wait"
             ],
-            "problemMatcher": []
+            "problemMatcher": [
+                "$gcc"
+            ]
         }
     ]
 }
