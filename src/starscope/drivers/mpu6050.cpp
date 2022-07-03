@@ -1,5 +1,4 @@
 #include "starscope/drivers/mpu6050.hpp"
-#include <bitset>
 
 namespace Starscope::Drivers::MPU6050
 {
@@ -116,6 +115,7 @@ void Driver::set_scaling(const ACCEL_RANGE accel_scaling, const GYRO_RANGE gyro_
 }
 
 void Driver::_deinit() {
+    //TODO: Enter low power mode?
 }
 
 void Driver::write(const std::byte mem_addr, const std::byte data) const {
