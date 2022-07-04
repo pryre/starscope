@@ -26,12 +26,12 @@ class StatefulSystem {
 
 class Size {
     public:
-    int x;
-    int y;
+    size_t x;
+    size_t y;
 
     public:
     Size();
-    Size(int x, int y);
+    Size(size_t x, size_t y);
 
     std::string to_string() const;
     // friend std::ostream& operator<<(std::ostream& out, const Size& s);

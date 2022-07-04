@@ -42,9 +42,10 @@ void StatefulSystem::_deinit() {
 }
 
 
-Size::Size() : x(0), y(0) {
+Size::Size() : Size(0,0) {
 }
-Size::Size(int x, int y) : x(x), y(y) {
+
+Size::Size(size_t x, size_t y) : x(x), y(y) {
 }
 
 std::string Size::to_string() const {
@@ -121,4 +122,3 @@ std::string Timer::to_string() const {
 // }
 
 }
-
