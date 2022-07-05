@@ -2,7 +2,6 @@
 #define _STARSCOPE_DRIVER_SHARPMEMDISPLAY_H
 
 #include "starscope/drivers/utils.hpp"
-#include "pico/stdlib.h"
 #include "hardware/spi.h"
 #include <array>
 #include <vector>

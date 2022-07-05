@@ -1,4 +1,5 @@
 set(_NODE_NAME ${_PROJECT_NAME}_pico)
+list(APPEND _NODE_LIBRARIES "pico_stdlib")
 
 #=================================
 # DRIVER DEPENDENCIES
@@ -15,9 +16,8 @@ target_include_directories(${_NODE_NAME} PRIVATE
 )
 
 # pull in common dependencies and additional i2c hardware support
-target_link_libraries(${_NODE_NAME} PRIVATE
+target_link_libraries(${_NODE_NAME} PUBLIC
     pico_stdlib
-    hardware_i2c
     ${_DRIVERS_UTILS_NAME}
     ${_DRIVERS_MPU6050_NAME}
     ${_STARSCOPE_UI_DISPLAY_NAME}

@@ -2,6 +2,11 @@
 
 namespace Starscope::Drivers::SharpMemDisplay {
 
+//TODO: https://bytefreaks.net/programming-2/c/c-undefined-reference-to-templated-class-function
+// Option 1: define commonly used templates
+//      template class Driver<400,240>;
+// Option 2: create a header only library and take the compilation hit
+
 template<size_t size_x, size_t size_y>
 Driver<size_x, size_y>::Driver(spi_inst_t* spi) :
 _vcom(SHARPMEM_BIT_VCOM),

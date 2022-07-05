@@ -12,6 +12,7 @@
         "Adafruit",
         "alloc",
         "bitmask",
+        "bytearray",
         "deinit",
         "dialout",
         "DLPF",

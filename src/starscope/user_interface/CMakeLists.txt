@@ -18,7 +18,8 @@ target_include_directories(${_STARSCOPE_UI_DISPLAY_NAME} PRIVATE
     ${PROJECT_SOURCE_DIR}/lib
 )
 
-target_link_libraries(${_STARSCOPE_UI_DISPLAY_NAME} PRIVATE
+
+target_link_libraries(${_STARSCOPE_UI_DISPLAY_NAME} PUBLIC
     ${_DRIVERS_UTILS_NAME}
     ${_DRIVERS_SHARPMEMDISPLAY_NAME}
 )

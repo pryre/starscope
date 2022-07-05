@@ -17,7 +17,7 @@ target_include_directories(${_DRIVERS_CLOCK_NAME} PRIVATE
     ${PROJECT_SOURCE_DIR}/include
 )
 
-target_link_libraries(${_DRIVERS_CLOCK_NAME} PRIVATE
+target_link_libraries(${_DRIVERS_CLOCK_NAME} PUBLIC
     pico_stdlib
 )
 
@@ -32,7 +32,7 @@ target_include_directories(${_DRIVERS_UTILS_NAME} PRIVATE
     ${PROJECT_SOURCE_DIR}/include
 )
 
-target_link_libraries(${_DRIVERS_UTILS_NAME} PRIVATE
+target_link_libraries(${_DRIVERS_UTILS_NAME} PUBLIC
     ${_DRIVERS_CLOCK_NAME}
 )
 
@@ -47,7 +47,7 @@ target_include_directories(${_DRIVERS_MPU6050_NAME} PRIVATE
     ${PROJECT_SOURCE_DIR}/include
 )
 
-target_link_libraries(${_DRIVERS_MPU6050_NAME} PRIVATE
+target_link_libraries(${_DRIVERS_MPU6050_NAME} PUBLIC
     pico_stdlib
     hardware_i2c
     ${_DRIVERS_UTILS_NAME}
@@ -64,7 +64,7 @@ target_include_directories(${_DRIVERS_SHARPMEMDISPLAY_NAME} PRIVATE
     ${PROJECT_SOURCE_DIR}/include
 )
 
-target_link_libraries(${_DRIVERS_SHARPMEMDISPLAY_NAME} PRIVATE
+target_link_libraries(${_DRIVERS_SHARPMEMDISPLAY_NAME} PUBLIC
     pico_stdlib
     hardware_spi
     ${_DRIVERS_UTILS_NAME}

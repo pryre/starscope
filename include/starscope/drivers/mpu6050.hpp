@@ -5,7 +5,6 @@
 #include <span>
 #include <inttypes.h>
 #include <math.h>
-#include "pico/stdlib.h"
 #include "hardware/i2c.h"
 #include "starscope/drivers/utils.hpp"
 

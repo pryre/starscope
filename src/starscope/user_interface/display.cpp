@@ -1,14 +1,15 @@
 #include "starscope/user_interface/display.hpp"
 #include "font8x8/font8x8_basic.h"
 #include "starscope/drivers/sharp_mem_display.hpp"
+#include "hardware/spi.h"
 
 using namespace Starscope;
 namespace Starscope::UserInterfaceDisplay {
 
 Display::Display() :
 _state(DEMO_STATE::WORDS),
-_screen(),
-_last_update(),
+_screen(spi0),
+_last_update(starscope_clock::time_point::min()),
 _rate_update(UPDATE_RATE) {
 }
 
