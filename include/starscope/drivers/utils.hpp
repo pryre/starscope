@@ -17,10 +17,12 @@ class StatefulSystem {
     bool init();
     void deinit();
     bool ready();
+    void update(const starscope_clock::time_point now = starscope_clock::now());
 
     private:
     virtual bool _init();
     virtual void _deinit();
+    virtual void _update(const starscope_clock::time_point now);
 };
 
 

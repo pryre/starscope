@@ -110,6 +110,7 @@ class Driver : public Utils::StatefulSystem {
     private:
     bool _init();
     void _deinit();
+    void _update(const starscope_clock::time_point now);
 
     void write(const std::byte mem_addr, const std::byte data) const;
     //std::vector<std::byte> read(std::byte mem_addr, size_t count) const;

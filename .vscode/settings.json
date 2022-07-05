@@ -15,6 +15,7 @@
         "deinit",
         "dialout",
         "DLPF",
+        "eabi",
         "EXTCOMIN",
         "gpio",
         "MGMT",

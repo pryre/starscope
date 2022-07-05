@@ -1,20 +1,10 @@
 set(_NODE_NAME ${_PROJECT_NAME}_pico)
-set(_STARSCOPE_UI_DISPLAY_NAME user_interface_display)
 
+#=================================
+# DRIVER DEPENDENCIES
+#=================================
 include(${CMAKE_CURRENT_LIST_DIR}/drivers/CMakeLists.txt)
-
-add_executable(${_STARSCOPE_UI_DISPLAY_NAME}
-    ${CMAKE_CURRENT_LIST_DIR}/${_STARSCOPE_UI_DISPLAY_NAME}.cpp
-)
-
-target_include_directories(${_STARSCOPE_UI_DISPLAY_NAME} PRIVATE
-    ${PROJECT_SOURCE_DIR}/include
-    ${PROJECT_SOURCE_DIR}/lib
-)
-
-target_link_libraries(${_STARSCOPE_UI_DISPLAY_NAME} PRIVATE
-    ${_DRIVERS_UTILS_NAME}
-)
+include(${CMAKE_CURRENT_LIST_DIR}/user_interface/CMakeLists.txt)
 
 add_executable(${_NODE_NAME}
     ${CMAKE_CURRENT_LIST_DIR}/${_NODE_NAME}.cpp
@@ -30,6 +20,7 @@ target_link_libraries(${_NODE_NAME} PRIVATE
     hardware_i2c
     ${_DRIVERS_UTILS_NAME}
     ${_DRIVERS_MPU6050_NAME}
+    ${_STARSCOPE_UI_DISPLAY_NAME}
 )
 
 if (TARGET tinyusb_device)

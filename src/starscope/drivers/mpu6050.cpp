@@ -10,6 +10,10 @@ Driver::Driver(i2c_inst_t* i2c, std::byte addr) :
     _scale_gyro(1.0) {
 }
 
+void Driver::_update(const starscope_clock::time_point now) {
+
+}
+
 //Updates the internal data from a data packet
 MPU6060Values Driver::get_values_from_raw_data(const std::span<const std::byte, LEN_RAW_VALUES> &data) const {
     std::span<const std::byte> raw = data.subspan(0, data.size());

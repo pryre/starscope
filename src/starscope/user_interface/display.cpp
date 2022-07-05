@@ -1,50 +1,47 @@
-#include "starscope/user_interface_display.hpp"
+#include "starscope/user_interface/display.hpp"
 #include "font8x8/font8x8_basic.h"
 #include "starscope/drivers/sharp_mem_display.hpp"
 
 using namespace Starscope;
+namespace Starscope::UserInterfaceDisplay {
 
-UserInterfaceDisplay::UserInterfaceDisplay() :
-_state(DEMO_STATE::WORDS) {
-    // screen = SharpMemDisplay(0, sck, mosi, cs, size)
-    // timer = Timer()
-    //TODO: Finish
+Display::Display() :
+_state(DEMO_STATE::WORDS),
+_screen(),
+_last_update(),
+_rate_update(UPDATE_RATE) {
 }
 
-bool UserInterfaceDisplay::_init() {
-    // self.screen.init()
+bool Display::_init() {
+    _screen.init();
     clear();
-    // self.timer.init(freq=10, callback=self._update) #Need to sync the screen at 0.5Hz < f < 10Hz
-    //TODO: Finish
 
     return true;
 }
 
-void UserInterfaceDisplay::_deinit() {
-    // self.timer.deinit()
+void Display::_deinit() {
     clear();
-    // self.screen.deinit()
-    //TODO: Finish
+    _screen.deinit();
 }
 
 
-size_t UserInterfaceDisplay::px_from_line(const size_t line, const size_t start_y) const {
+size_t Display::px_from_line(const size_t line, const size_t start_y) const {
     return (start_y + FONT_HEIGHT * line) % _screen.size().y;
 }
 
-size_t UserInterfaceDisplay::px_from_column(const size_t column, const size_t start_x) const {
+size_t Display::px_from_column(const size_t column, const size_t start_x) const {
     return (start_x + FONT_WIDTH * column) % _screen.size().x;
 }
 
-void UserInterfaceDisplay::render_font(std::span<const char, FONT_HEIGHT>bitmap, const size_t x, const size_t y, const bool invert, const unsigned int scaling) {
-    for(size_t i; i<bitmap.size(); i++) {
+void Display::render_font(std::span<const char, FONT_HEIGHT>bitmap, const size_t x, const size_t y, const bool invert, const unsigned int scaling) {
+    for(size_t i=0; i<bitmap.size(); i++) {
         const uint8_t data = bitmap[i];
 
-        for(size_t j; j<FONT_WIDTH; j++) {
+        for(size_t j=0; j<FONT_WIDTH; j++) {
             const bool v = ((bool)(data & (1 << j))) ^ invert;
 
-            for(size_t k; k<scaling; k++) {
-                for(size_t l; l<scaling; l++) {
+            for(size_t k=0; k<scaling; k++) {
+                for(size_t l=0; l<scaling; l++) {
                     _screen.set_pixel(x + j*scaling + k, y + i*scaling + l, v);
                 }
             }
@@ -52,22 +49,24 @@ void UserInterfaceDisplay::render_font(std::span<const char, FONT_HEIGHT>bitmap,
     }
 }
 
-void UserInterfaceDisplay::update() const {
-    // with benchmark("sync"):
-    // self.screen.sync()
-    //TODO: Finish
+void Display::_update(const starscope_clock::time_point now) {
+    if(now - _last_update > _rate_update) {
+        // with benchmark("sync"):
+        _screen.sync();
+        _last_update = now;
+    }
 }
 
 
-void UserInterfaceDisplay::clear() {
+void Display::clear() {
     _screen.clear_sync();
 }
 
-void UserInterfaceDisplay::fill() {
+void Display::fill() {
     _screen.fill();
 }
 
-Utils::Size UserInterfaceDisplay::print_ascii(const std::string text, Utils::Size location, const bool invert, const bool trailing_newline, const int scaling) {
+Utils::Size Display::print_ascii(const std::string text, Utils::Size location, const bool invert, const bool trailing_newline, const int scaling) {
     size_t col = 0;
     size_t row = 0;
 
@@ -91,7 +90,7 @@ Utils::Size UserInterfaceDisplay::print_ascii(const std::string text, Utils::Siz
     return Utils::Size(px_from_column(col, location.x), px_from_line(row, location.y));
 }
 
-void UserInterfaceDisplay::run_demo() {
+void Display::run_demo() {
     clear();
 
     switch (_state)
@@ -124,4 +123,6 @@ void UserInterfaceDisplay::run_demo() {
         break;
     }
     }
+}
+
 }

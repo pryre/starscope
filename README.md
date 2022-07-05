@@ -3,6 +3,11 @@ A low-cost solution for star-finding and ranging.
 
 ## Setup
 
+### Setup submodules
+```
+git submodule update --init
+```
+
 ### Dependencies (Arch Linux - fish)
 Install SDK and help tools:
 ```

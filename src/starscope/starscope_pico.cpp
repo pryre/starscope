@@ -4,6 +4,7 @@
 #include "hardware/i2c.h"
 #include "starscope/drivers/utils.hpp"
 #include "starscope/drivers/mpu6050.hpp"
+#include "starscope/user_interface/display.hpp"
 
 using namespace Starscope;
 
@@ -42,6 +43,11 @@ int main() {
     if(!mpu6050.init())
         printf("Failed to initialize MPU6050\n");
 
+    UserInterfaceDisplay::Display display;
+    if(!display.init())
+        printf("Failed to initialize display\n");
+
+
     bool stdio_sent_header = false;
 
     while (true) {
@@ -62,6 +68,11 @@ int main() {
             printf("\nTemp: %0.2f\n", data.temperature);
         } else {
             printf("MPU6050 not initialized\n");
+        }
+        if(display.ready()) {
+            display.run_demo();
+        } else {
+            printf("display not initialized\n");
         }
         sleep_ms(250);
         gpio_put(STARSCOPE_PIN_LED, 0);

@@ -2,7 +2,10 @@
 #define _STARSCOPE_DRIVER_SHARPMEMDISPLAY_H
 
 #include "starscope/drivers/utils.hpp"
+#include "pico/stdlib.h"
+#include "hardware/spi.h"
 #include <array>
+#include <vector>
 #include <span>
 
 //XXX: https://github.com/pramasoul/micropython-SHARP_Memory_Display
@@ -35,7 +38,7 @@ const std::byte SHARPMEM_BIT_VCOM = BIT_FLIP[0x40]; //0x02  # 0x40 in LSB format
 const std::byte SHARPMEM_BIT_CLEAR = BIT_FLIP[0x20]; //0x04  # 0x20 in LSB format
 
 // XXX: By default all of the pixel operations are inverted (0x01 is off)
-const std::byte SHARPMEM_DUMMY_BYTE = std::byte{0x00};
+const std::byte SHARPMEM_ZERO_BYTE = std::byte{0x00};
 
 const std::byte SHARPMEM_PIXEL_BYTE_OFF = std::byte{0xFF};
 const std::byte SHARPMEM_PIXEL_BYTE_ON = std::byte{0x00};
@@ -45,11 +48,12 @@ class Driver : public Utils::StatefulSystem  {
     private:
     static constexpr size_t _buffer_length = size_x * size_y;
     std::array<std::byte, _buffer_length> _lines;
-    std::array<size_t, size_y> _lines_changed;
+    std::vector<size_t> _lines_changed;
     std::byte _vcom;
+    spi_inst_t* _spi;
 
     public:
-    Driver();
+    Driver(spi_inst_t* spi);
     inline const Utils::Size size() const { return Utils::Size(size_x, size_y); };
 
     // Clears the internal buffer
@@ -70,7 +74,8 @@ class Driver : public Utils::StatefulSystem  {
 
     private:
     bool _init();
-    void deinit();
+    void _deinit();
+    void _update(const starscope_clock::time_point now);
 
     void toggle_vcom();
     void write(std::span<std::byte>data) const;
