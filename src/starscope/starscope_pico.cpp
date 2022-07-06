@@ -15,7 +15,7 @@ using namespace Starscope;
 #define STARSCOPE_PIN_SPI_SCK 2
 #define STARSCOPE_PIN_SPI_MOSI 3
 // #define STARSCOPE_PIN_SPI_MISO 4
-#define STARSCOPE_PIN_SPI_CS 5
+#define STARSCOPE_PIN_SPI_CS_SHARPMEMDISPLAY 5
 
 #define STARSCOPE_I2C_HARDWARE i2c1
 #define STARSCOPE_I2C_SPEED 400'000
@@ -31,8 +31,25 @@ uint64_t time_monotonic_us() {
     return time_us_64();
 }
 
+size_t spi_write(const std::byte src) {
+    return spi_write_blocking(STARSCOPE_SPI_HARDWARE, (uint8_t*)&src, 1);
+}
+
 size_t spi_write(const std::span<const std::byte>src) {
     return spi_write_blocking(STARSCOPE_SPI_HARDWARE, (uint8_t*)(src.data()), src.size());
+}
+
+void spi_set_cs(STARSCOPE_SPI_SELECT chip) {
+    switch(chip) {
+    case STARSCOPE_SPI_SELECT::SharpMemDisplay: {
+        gpio_put(STARSCOPE_PIN_SPI_CS_SHARPMEMDISPLAY, true);
+        break;
+    }
+    default: { //None
+        gpio_put(STARSCOPE_PIN_SPI_CS_SHARPMEMDISPLAY, false);
+        break;
+    }
+    }
 }
 
 // size_t spi_write_read(const std::span<const std::byte>src, const std::span<const std::byte>dst) {
@@ -109,11 +126,13 @@ int main() {
         } else {
             printf("MPU6050 not initialized\n");
         }
+
         if(display.ready()) {
             display.run_demo();
         } else {
             printf("display not initialized\n");
         }
+
         sleep_ms(250);
         gpio_put(STARSCOPE_PIN_LED, 0);
         sleep_ms(250);

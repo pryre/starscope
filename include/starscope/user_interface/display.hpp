@@ -6,9 +6,7 @@
 #include <inttypes.h>
 #include "starscope/drivers/utils.hpp"
 #include "starscope/drivers/sharp_mem_display.hpp"
-#include <chrono>
 
-using namespace std::chrono_literals;
 using namespace Starscope;
 namespace Starscope::UserInterfaceDisplay {
 
@@ -22,7 +20,6 @@ const size_t SCREEN_SIZE_X = 400;
 const size_t SCREEN_SIZE_Y = 240;
 constexpr size_t FONT_WIDTH = sizeof(uint8_t)*8;
 const size_t FONT_HEIGHT = 8;
-const starscope_clock::duration UPDATE_RATE = 100ms;
 
 const char ASCII_PRINTABLE_START = 0x20; //First ascii char: ' '
 
@@ -30,8 +27,6 @@ class Display : public Utils::StatefulSystem {
     private:
     DEMO_STATE _state;
     Drivers::SharpMemDisplay::Driver<SCREEN_SIZE_X,SCREEN_SIZE_Y> _screen;
-    starscope_clock::time_point _last_update;
-    starscope_clock::duration _rate_update;
 
     public:
     Display();

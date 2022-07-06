@@ -7,9 +7,7 @@ namespace Starscope::UserInterfaceDisplay {
 
 Display::Display() :
 _state(DEMO_STATE::WORDS),
-_screen(),
-_last_update(starscope_clock::time_point::min()),
-_rate_update(UPDATE_RATE) {
+_screen() {
 }
 
 bool Display::_init() {
@@ -50,13 +48,8 @@ void Display::render_font(std::span<const char, FONT_HEIGHT>bitmap, const size_t
 }
 
 void Display::_update(const starscope_clock::time_point now) {
-    if(now - _last_update > _rate_update) {
-        // with benchmark("sync"):
-        _screen.sync();
-        _last_update = now;
-    }
+    _screen.update(now);
 }
-
 
 void Display::clear() {
     _screen.clear_sync();

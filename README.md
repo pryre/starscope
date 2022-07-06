@@ -8,7 +8,9 @@ A low-cost solution for star-finding and ranging.
 git submodule update --init
 ```
 
-### Dependencies (Arch Linux - fish)
+### Dependencies
+
+#### Arch Linux - fish
 Install SDK and help tools:
 ```
 pikaur -S pico-sdk
@@ -20,7 +22,7 @@ pikaur -S picotool
 pikaur -S picocom arm-none-eabi-gdb
 ```
 
-### Udev rule for non-sudo access and upload for Linux
+### (Linux) Udev rule for non-sudo access and upload
 Make sure your user is in the `dialout` group:
 ```
 sudo usermod -aG dialout ${USER}
@@ -34,4 +36,16 @@ SUBSYSTEMS=="usb", ACTION=="add", ATTR{idVendor}=="2e8a", ATTRS{idProduct}=="000
 Then trigger a udev reload:
 ```
 sudo udevadm control --reload-rules && sudo udevadm trigger
+```
+
+### Prepare and Build Environment
+In Code:
+```
+> CMake Configure
+> CMake Build
+```
+
+There are also Code Tasks set up to perform actions like uploading and monitoring:
+```
+> Tasks: Run
 ```

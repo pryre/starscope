@@ -6,15 +6,15 @@
 #include <array>
 #include <vector>
 #include <span>
+#include <chrono>
 
 #define Driver_LS013B4DN04 Driver<96, 96>
 #define Driver_LS027B7DH01 Driver<400, 240>
 
 //XXX: https://github.com/pramasoul/micropython-SHARP_Memory_Display
 
+using namespace std::chrono_literals;
 namespace Starscope::Drivers::SharpMemDisplay {
-
-
 
 const size_t MAX_BYTE_COMBINATIONS = 0x100; //0xFF + 1
 // Lookup table for byte values in LSB format
@@ -47,20 +47,26 @@ const std::byte SHARPMEM_ZERO_BYTE = std::byte{0x00};
 const std::byte SHARPMEM_PIXEL_BYTE_OFF = std::byte{0xFF};
 const std::byte SHARPMEM_PIXEL_BYTE_ON = std::byte{0x00};
 
+const starscope_clock::duration SHARPMEM_UPDATE_RATE = 100ms;
+
 template<size_t size_x, size_t size_y>
 class Driver : public Utils::StatefulSystem  {
     private:
-    static constexpr size_t _buffer_length = size_x * size_y;
+    static constexpr size_t _step = size_x/sizeof(std::byte);
+    static constexpr size_t _buffer_length = size_x / sizeof(std::byte) * size_y;
     std::array<std::byte, _buffer_length> _lines;
     //TODO: Should use something that's not a vector?
     std::vector<size_t> _lines_changed;
     std::byte _vcom;
+    starscope_clock::time_point _last_update;
+    starscope_clock::duration _rate_update;
 
     public:
     Driver();
     inline const Utils::Size size() const { return Utils::Size(size_x, size_y); };
 
     // Clears the internal buffer
+    void set_all(const bool onoff, const bool set_changed=true);
     void clear(const bool set_changed=true);
     void fill(const bool set_changed=true);
 
@@ -81,7 +87,11 @@ class Driver : public Utils::StatefulSystem  {
     void _deinit();
     void _update(const starscope_clock::time_point now);
 
-    void toggle_vcom();
+    void _toggle_vcom();
+    std::byte _flipped(const std::byte b) const;
+    size_t _ind_from_x_y(const size_t x, const size_t y) const;
+    std::byte _sub_byte_bitmask(const size_t x) const;
+
     // void write(std::span<std::byte>data) const;
 };
 
