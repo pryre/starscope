@@ -1,15 +1,20 @@
 #ifndef _STARSCOPE_DRIVER_SHARPMEMDISPLAY_H
 #define _STARSCOPE_DRIVER_SHARPMEMDISPLAY_H
 
+#include "starscope/hardware_abstraction.hpp"
 #include "starscope/drivers/utils.hpp"
-#include "hardware/spi.h"
 #include <array>
 #include <vector>
 #include <span>
 
+#define Driver_LS013B4DN04 Driver<96, 96>
+#define Driver_LS027B7DH01 Driver<400, 240>
+
 //XXX: https://github.com/pramasoul/micropython-SHARP_Memory_Display
 
 namespace Starscope::Drivers::SharpMemDisplay {
+
+
 
 const size_t MAX_BYTE_COMBINATIONS = 0x100; //0xFF + 1
 // Lookup table for byte values in LSB format
@@ -47,12 +52,12 @@ class Driver : public Utils::StatefulSystem  {
     private:
     static constexpr size_t _buffer_length = size_x * size_y;
     std::array<std::byte, _buffer_length> _lines;
+    //TODO: Should use something that's not a vector?
     std::vector<size_t> _lines_changed;
     std::byte _vcom;
-    spi_inst_t* _spi;
 
     public:
-    Driver(spi_inst_t* spi);
+    Driver();
     inline const Utils::Size size() const { return Utils::Size(size_x, size_y); };
 
     // Clears the internal buffer
@@ -77,7 +82,7 @@ class Driver : public Utils::StatefulSystem  {
     void _update(const starscope_clock::time_point now);
 
     void toggle_vcom();
-    void write(std::span<std::byte>data) const;
+    // void write(std::span<std::byte>data) const;
 };
 
 }

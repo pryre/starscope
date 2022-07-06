@@ -8,9 +8,8 @@ namespace Starscope::Drivers::SharpMemDisplay {
 // Option 2: create a header only library and take the compilation hit
 
 template<size_t size_x, size_t size_y>
-Driver<size_x, size_y>::Driver(spi_inst_t* spi) :
-_vcom(SHARPMEM_BIT_VCOM),
-_spi(spi) {
+Driver<size_x, size_y>::Driver() :
+_vcom(SHARPMEM_BIT_VCOM) {
     _lines_changed.reserve(size_y);
     // self.spi = None
     // self._vcom = SharpMemDisplay.SHARPMEM_BIT_VCOM
@@ -44,9 +43,13 @@ void Driver<size_x, size_y>::_deinit() {
 }
 
 template<size_t size_x, size_t size_y>
-void Driver<size_x, size_y>::write(std::span<std::byte>data) const {
-    spi_write_blocking(_spi, (uint8_t*)(data.data()), data.size());
+void Driver<size_x, size_y>::_update(const starscope_clock::time_point now) {
 }
+
+// template<size_t size_x, size_t size_y>
+// void Driver<size_x, size_y>::write(std::span<std::byte>data) const {
+//     spi_write_blocking(_spi, (uint8_t*)(data.data()), data.size());
+// }
 
 
 template<size_t size_x, size_t size_y>
@@ -233,5 +236,8 @@ void Driver<size_x, size_y>::demo_checker() {
 
     // # self.sync()
 }
+
+template class Driver_LS013B4DN04;
+template class Driver_LS027B7DH01;
 
 }

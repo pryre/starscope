@@ -41,6 +41,9 @@ bool StatefulSystem::_init() {
 void StatefulSystem::_deinit() {
 }
 
+void StatefulSystem::_update(const starscope_clock::time_point now) {
+}
+
 
 Size::Size() : Size(0,0) {
 }

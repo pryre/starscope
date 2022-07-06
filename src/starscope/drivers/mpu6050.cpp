@@ -1,10 +1,10 @@
 #include "starscope/drivers/mpu6050.hpp"
+#include "starscope/hardware_abstraction.hpp"
 
 namespace Starscope::Drivers::MPU6050
 {
 
-Driver::Driver(i2c_inst_t* i2c, std::byte addr) :
-    _i2c(i2c),
+Driver::Driver(std::byte addr) :
     _addr(addr),
     _scale_accel(1.0),
     _scale_gyro(1.0) {
@@ -15,7 +15,7 @@ void Driver::_update(const starscope_clock::time_point now) {
 }
 
 //Updates the internal data from a data packet
-MPU6060Values Driver::get_values_from_raw_data(const std::span<const std::byte, LEN_RAW_VALUES> &data) const {
+MPU6060Values Driver::get_values_from_raw_data(const std::span<const std::byte, LEN_RAW_VALUES> data) const {
     std::span<const std::byte> raw = data.subspan(0, data.size());
 
     MPU6060Values values = MPU6060Values();
@@ -49,13 +49,14 @@ int16_t Driver::data_decoder(std::span<const std::byte> &data) const {
 }
 
 std::array<std::byte, LEN_RAW_VALUES> Driver::get_raw_values() const {
-    std::array<std::byte, LEN_RAW_VALUES> data;
+    const std::array<const std::byte, 1> src = { REG_RAW_VALUES };
+    std::array<std::byte, LEN_RAW_VALUES> dst;
     //Write the memory address to start reading data from
-    i2c_write_blocking(_i2c, (uint8_t)_addr, (uint8_t*)&REG_RAW_VALUES, 1, true);
-    i2c_read_blocking(_i2c, (uint8_t)_addr, (uint8_t*)data.data(), LEN_RAW_VALUES, false);
+    i2c_write(_addr, src, true);
+    i2c_read(_addr, dst, false);
     // for(const auto d : data)
     //     printf("%x\n", (uint8_t)d);
-    return data;
+    return dst;
 }
 
 MPU6060Values Driver::get_values() const {
@@ -123,8 +124,8 @@ void Driver::_deinit() {
 }
 
 void Driver::write(const std::byte mem_addr, const std::byte data) const {
-    const std::byte src[LEN_REG_WRITE] = {mem_addr, data};
-    i2c_write_blocking(_i2c, (uint8_t)_addr, (uint8_t*)src, LEN_REG_WRITE, false);
+    const std::array<const std::byte, LEN_REG_WRITE> src = { mem_addr, data };
+    i2c_write(_addr, src, false);
 }
 
 }

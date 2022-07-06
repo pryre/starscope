@@ -5,7 +5,6 @@
 #include <span>
 #include <inttypes.h>
 #include <math.h>
-#include "hardware/i2c.h"
 #include "starscope/drivers/utils.hpp"
 
 namespace Starscope::Drivers::MPU6050 {
@@ -89,19 +88,18 @@ struct MPU6060Values {
 
 class Driver : public Utils::StatefulSystem {
     private:
-    i2c_inst_t* _i2c;
-    std::byte _addr;
+    const std::byte _addr;
     float _scale_accel;
     float _scale_gyro;
 
     public:
-    Driver(i2c_inst_t* i2c, std::byte addr);
+    Driver(const std::byte addr = DEFAULT_ADDRESS);
 
     void set_scaling(const ACCEL_RANGE accel_scaling = ACCEL_RANGE::A_4G, const GYRO_RANGE gyro_scaling = GYRO_RANGE::G_500_DPS);
 
     std::array<std::byte, LEN_RAW_VALUES> get_raw_values() const;
     MPU6060Values get_values() const;
-    MPU6060Values get_values_from_raw_data(const std::span<const std::byte, LEN_RAW_VALUES> &data) const;
+    MPU6060Values get_values_from_raw_data(const std::span<const std::byte, LEN_RAW_VALUES> data) const;
 
     //Takes a span of data, consumes the next set of bytes, returns the decoded packet
     int16_t data_decoder(std::span<const std::byte> &data) const;

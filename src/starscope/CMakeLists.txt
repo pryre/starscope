@@ -2,6 +2,28 @@ set(_NODE_NAME ${_PROJECT_NAME}_pico)
 list(APPEND _NODE_LIBRARIES "pico_stdlib")
 
 #=================================
+# PICO SDK
+#=================================
+
+# Pull in SDK (must be before project)
+set(ENV{PICO_SDK_PATH} /usr/share/pico-sdk)
+# set(ENV{PICO_SDK_FETCH_FROM_GIT} FALSE)
+include($ENV{PICO_SDK_PATH}/external/pico_sdk_import.cmake)
+
+set(CMAKE_C_STANDARD 11)
+set(CMAKE_CXX_STANDARD 20)
+
+if (PICO_SDK_VERSION_STRING VERSION_LESS "1.3.0")
+    message(FATAL_ERROR "Raspberry Pi Pico SDK version 1.3.0 (or later) required. Your version is ${PICO_SDK_VERSION_STRING}")
+endif()
+
+# Initialize the SDK
+pico_sdk_init()
+
+# include(example_auto_set_url.cmake)
+
+
+#=================================
 # DRIVER DEPENDENCIES
 #=================================
 include(${CMAKE_CURRENT_LIST_DIR}/drivers/CMakeLists.txt)
@@ -18,6 +40,8 @@ target_include_directories(${_NODE_NAME} PRIVATE
 # pull in common dependencies and additional i2c hardware support
 target_link_libraries(${_NODE_NAME} PUBLIC
     pico_stdlib
+    hardware_i2c
+    hardware_spi
     ${_DRIVERS_UTILS_NAME}
     ${_DRIVERS_MPU6050_NAME}
     ${_STARSCOPE_UI_DISPLAY_NAME}
@@ -39,3 +63,4 @@ pico_add_extra_outputs(${_NODE_NAME})
 
 # add url via pico_set_program_url
 # example_auto_set_url(i2c_bus_scan)
+
