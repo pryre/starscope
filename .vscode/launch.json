@@ -1,11 +1,56 @@
 {
     "configurations": [
         {
-            "name": "Debug",
+            "name": "Pico (BMP)",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceRoot}/build/starscope.elf",
-            "preLaunchTask": "upload",
+            "cwd": "${workspaceRoot}",
+            "MIMode": "gdb",
+            "targetArchitecture": "arm",
+            "logging": {
+                "engineLogging": true
+            },
+            "program": "${workspaceRoot}/build/starscope_pico.elf",
+            "miDebuggerPath": "arm-none-eabi-gdb",
+            "customLaunchSetupCommands": [
+                {
+                    "text": "cd ${workspaceRoot}/build"
+                },
+                {
+                    "text": "target extended-remote /dev/serial/by-id/usb-Black_Sphere_Technologies_Black_Magic_Probe_BFC8A2CA-if00"
+                },
+                {
+                    "text": "monitor tpwr enable"
+                },
+                {
+                    "text": "monitor swdp_scan"
+                },
+                {
+                    "text": "attach 1"
+                },
+                {
+                    "text": "file starscope_pico.elf"
+                },
+                {
+                    "text": "load"
+                },
+                {
+                    "text": "cd ${workspaceRoot}"
+                },
+                {
+                    "text": "set mem inaccessible-by-default off"
+                },
+                {
+                    "text": "break main"
+                }
+            ],
+            "serverLaunchTimeout": 10000,
+            "windows": {
+                "miDebuggerPath": "arm-none-eabi-gdb.exe"
+            },
+            "linux": {
+                "miDebuggerPath": "arm-none-eabi-gdb"
+            }
         }
     ]
 }

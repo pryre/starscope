@@ -147,11 +147,11 @@ int main() {
             printf("MPU6050 not initialized\n");
         }
 
-        if(display.ready()) {
-            display.run_demo();
-        } else {
-            printf("display not initialized\n");
-        }
+        // if(display.ready()) {
+        //     display.run_demo();
+        // } else {
+        //     printf("display not initialized\n");
+        // }
 
         sleep_ms(250);
         gpio_put(STARSCOPE_PIN_LED, 0);

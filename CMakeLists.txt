@@ -3,6 +3,8 @@ set(_PROJECT_NAME starscope)
 project(${_PROJECT_NAME} C CXX ASM)
 
 # Compiler options
+set(CMAKE_BUILD_TYPE Debug)
+# set(CMAKE_BUILD_TYPE Release)
 set(CMAKE_DEBUG_POSTFIX d)
 
 add_compile_options(-Wall
