@@ -66,10 +66,10 @@ void Driver<size_x, size_y>::fill(const bool set_changed) {
     set_all(true, set_changed);
 }
 
-template<size_t size_x, size_t size_y>
-std::byte Driver<size_x, size_y>::_flipped(const std::byte b) const {
-    return BIT_FLIP[(size_t)b];
-}
+// template<size_t size_x, size_t size_y>
+// std::byte Driver<size_x, size_y>::_flipped(const std::byte b) const {
+//     return BIT_FLIP[(size_t)b];
+// }
 
 template<size_t size_x, size_t size_y>
 size_t Driver<size_x, size_y>::_ind_from_x_y(const size_t x, const size_t y) const {
@@ -78,7 +78,8 @@ size_t Driver<size_x, size_y>::_ind_from_x_y(const size_t x, const size_t y) con
 
 template<size_t size_x, size_t size_y>
 std::byte Driver<size_x, size_y>::_sub_byte_bitmask(const size_t x) const {
-    return std::byte{1 << (x%sizeof(std::byte))};
+    const uint8_t step = x%sizeof(std::byte);
+    return std::byte{(uint8_t)(0b1000'0000 >> step)};
 }
 
 template<size_t size_x, size_t size_y>
@@ -141,8 +142,8 @@ void Driver<size_x, size_y>::clear_sync() {
     spi_set_cs(STARSCOPE_SPI_SELECT::SharpMemDisplay);
 
     const std::array<std::byte, 2> data = {
-        BIT_FLIP[(uint8_t)(_vcom | SHARPMEM_BIT_CLEAR)],
-        BIT_FLIP[(uint8_t)SHARPMEM_ZERO_BYTE]
+        _vcom | SHARPMEM_BIT_CLEAR,
+        SHARPMEM_ZERO_BYTE
     };
 
     spi_write(data);
@@ -159,20 +160,20 @@ void Driver<size_x, size_y>::sync() {
 
     spi_set_cs(STARSCOPE_SPI_SELECT::SharpMemDisplay);
 
-    spi_write(_flipped(_vcom | SHARPMEM_BIT_WRITECMD));
+    spi_write(_vcom | SHARPMEM_BIT_WRITECMD);
 
     for(auto&y : _lines_changed) {
-        spi_write(_flipped(std::byte{y+1}));
+        spi_write(BIT_FLIP[y+1]);
 
         std::span line = lines.subspan(_ind_from_x_y(0,y), _step);
 
         for(auto&b : line)
-            spi_write(_flipped(b));
+            spi_write(b);
 
-        spi_write(_flipped(SHARPMEM_ZERO_BYTE));
+        spi_write(SHARPMEM_ZERO_BYTE);
     }
 
-    spi_write(_flipped(SHARPMEM_ZERO_BYTE));
+    spi_write(SHARPMEM_ZERO_BYTE);
 
     _toggle_vcom();
     spi_set_cs(STARSCOPE_SPI_SELECT::None);

@@ -16,7 +16,7 @@
 using namespace std::chrono_literals;
 namespace Starscope::Drivers::SharpMemDisplay {
 
-const size_t MAX_BYTE_COMBINATIONS = 0x100; //0xFF + 1
+constexpr size_t MAX_BYTE_COMBINATIONS = 0xFF + 1;
 // Lookup table for byte values in LSB format
 const std::array<std::byte, MAX_BYTE_COMBINATIONS> BIT_FLIP = {
     std::byte{0x00}, std::byte{0x80}, std::byte{0x40}, std::byte{0xC0}, std::byte{0x20}, std::byte{0xA0}, std::byte{0x60}, std::byte{0xE0}, std::byte{0x10}, std::byte{0x90}, std::byte{0x50}, std::byte{0xD0}, std::byte{0x30}, std::byte{0xB0}, std::byte{0x70}, std::byte{0xF0},
@@ -88,7 +88,7 @@ class Driver : public Utils::StatefulSystem  {
     void _update(const starscope_clock::time_point now);
 
     void _toggle_vcom();
-    std::byte _flipped(const std::byte b) const;
+    // std::byte _flipped(const std::byte b) const;
     size_t _ind_from_x_y(const size_t x, const size_t y) const;
     std::byte _sub_byte_bitmask(const size_t x) const;
 

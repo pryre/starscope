@@ -30,6 +30,11 @@ void StatefulSystem::deinit() {
     _is_ready = false;
 }
 
+void StatefulSystem::update(const starscope_clock::time_point now) {
+    if(_is_ready)
+        _update(now);
+}
+
 bool StatefulSystem::ready() {
     return _is_ready;
 }

@@ -42,11 +42,12 @@ size_t spi_write(const std::span<const std::byte>src) {
 void spi_set_cs(STARSCOPE_SPI_SELECT chip) {
     switch(chip) {
     case STARSCOPE_SPI_SELECT::SharpMemDisplay: {
-        gpio_put(STARSCOPE_PIN_SPI_CS_SHARPMEMDISPLAY, true);
+        gpio_put(STARSCOPE_PIN_SPI_CS_SHARPMEMDISPLAY, false);
         break;
     }
     default: { //None
-        gpio_put(STARSCOPE_PIN_SPI_CS_SHARPMEMDISPLAY, false);
+        //Set all CS pins high here
+        gpio_put(STARSCOPE_PIN_SPI_CS_SHARPMEMDISPLAY, true);
         break;
     }
     }
@@ -69,6 +70,12 @@ size_t i2c_read(const std::byte addr, const std::span<std::byte>dst, const bool 
 // Hardware Setup
 //=====================
 
+void init_hardware_heartbeat() {
+    gpio_init(STARSCOPE_PIN_LED);
+    gpio_set_dir(STARSCOPE_PIN_LED, GPIO_OUT);
+    gpio_put(STARSCOPE_PIN_LED, 0);
+}
+
 void init_hardware_i2c() {
     i2c_init(STARSCOPE_I2C_HARDWARE, STARSCOPE_I2C_SPEED);
     gpio_set_function(STARSCOPE_PIN_I2C_SDA, GPIO_FUNC_I2C);
@@ -79,10 +86,22 @@ void init_hardware_i2c() {
     bi_decl(bi_2pins_with_func(STARSCOPE_PIN_I2C_SDA, STARSCOPE_PIN_I2C_SCL, GPIO_FUNC_I2C));
 }
 
-void init_hardware_heartbeat() {
-    gpio_init(STARSCOPE_PIN_LED);
-    gpio_set_dir(STARSCOPE_PIN_LED, GPIO_OUT);
-    gpio_put(STARSCOPE_PIN_LED, 0);
+void init_hardware_spi() {
+    // This example will use SPI0 at 0.5MHz.
+    spi_init(STARSCOPE_SPI_HARDWARE, STARSCOPE_SPI_SPEED);
+    gpio_set_function(STARSCOPE_PIN_SPI_SCK, GPIO_FUNC_SPI);
+    gpio_set_function(STARSCOPE_PIN_SPI_MOSI, GPIO_FUNC_SPI);
+    // XXX: Unused: gpio_set_function(STARSCOPE_PIN_SPI_MISO, GPIO_FUNC_SPI);
+    // Make the SPI pins available to picotool
+    // bi_decl(bi_3pins_with_func(PIN_MISO, PIN_MOSI, PIN_SCK, GPIO_FUNC_SPI));
+    bi_decl(bi_2pins_with_func(STARSCOPE_PIN_SPI_SCK, STARSCOPE_PIN_SPI_MOSI, GPIO_FUNC_SPI));
+    // XXX: Chip select for each attached device
+    // Chip select is active-low, so we'll initialise it to a driven-high state
+    gpio_init(STARSCOPE_PIN_SPI_CS_SHARPMEMDISPLAY);
+    gpio_set_dir(STARSCOPE_PIN_SPI_CS_SHARPMEMDISPLAY, GPIO_OUT);
+    gpio_put(STARSCOPE_PIN_SPI_CS_SHARPMEMDISPLAY, false);
+    // Make the CS pin available to picotool
+    bi_decl(bi_1pin_with_name(STARSCOPE_PIN_SPI_CS_SHARPMEMDISPLAY, "SPI CS"));
 }
 
 //=====================
@@ -94,6 +113,7 @@ int main() {
     Utils::Timer timer_init("Initialization");
     init_hardware_heartbeat();
     init_hardware_i2c();
+    init_hardware_spi();
     timer_init.end();
 
     Drivers::MPU6050::Driver mpu6050;

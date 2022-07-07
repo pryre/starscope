@@ -8,6 +8,27 @@
             "problemMatcher": "$gcc"
         },
         {
+            "label": "bootloader",
+            "command": "picotool",
+            "args": [
+                "reboot",
+                "-f",
+                "-u"
+            ],
+            "type": "shell",
+            "problemMatcher": [
+                "$gcc"
+            ]
+        },
+        {
+            "label": "_short_wait",
+            "command": "sleep",
+            "args": [
+                "1"
+            ],
+            "type": "shell"
+        },
+        {
             "label": "upload",
             "command": "picotool",
             "args": [
@@ -17,7 +38,9 @@
             "type": "shell",
             "dependsOrder": "sequence",
             "dependsOn": [
-                "cmake_build_default"
+                "cmake_build_default",
+                "bootloader",
+                "_short_wait"
             ],
             "problemMatcher": [
                 "$gcc"
@@ -37,14 +60,6 @@
             "problemMatcher": [
                 "$gcc"
             ]
-        },
-        {
-            "label": "_short_wait",
-            "command": "sleep",
-            "args": [
-                "1"
-            ],
-            "type": "shell"
         },
         {
             "label": "upload_and_monitor",
