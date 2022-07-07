@@ -1,6 +1,29 @@
 {
     "configurations": [
         {
+            "name": "Pico Debug",
+            "cwd": "${workspaceRoot}",
+            "executable": "${command:cmake.launchTargetPath}",
+            "request": "launch",
+            "type": "cortex-debug",
+            "servertype": "openocd",
+            // This may need to be arm-none-eabi-gdb depending on your system
+            "gdbPath" : "arm-none-eabi-gdb",
+            "device": "RP2040",
+            "configFiles": [
+                "raspberrypi-swd.cfg",
+                "target/rp2040.cfg"
+            ],
+            // "svdFile": "${env:PICO_SDK_PATH}/src/rp2040/hardware_regs/rp2040.svd",
+            "svdFile": "/usr/share/pico-sdk/src/rp2040/hardware_regs/rp2040.svd",
+            "runToMain": true,
+            // Work around for stopping at main on restart
+            "postRestartCommands": [
+                "break main",
+                "continue"
+            ]
+        },
+        {
             "name": "Pico (BMP)",
             "type": "cppdbg",
             "request": "launch",
@@ -17,7 +40,7 @@
                     "text": "cd ${workspaceRoot}/build"
                 },
                 {
-                    "text": "target extended-remote /dev/serial/by-id/usb-Black_Sphere_Technologies_Black_Magic_Probe_BFC8A2CA-if00"
+                    "text": "target extended-remote /dev/serial/by-id/usb-Black_Magic_Debug_Black_Magic_Probe_v1.8.0_BFC8A2CA-if00"
                 },
                 {
                     "text": "monitor tpwr enable"
