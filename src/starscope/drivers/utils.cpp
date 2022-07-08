@@ -13,7 +13,10 @@ namespace Starscope::Utils
 //     return os.str();
 // }
 
-StatefulSystem::StatefulSystem() : _is_ready(false) {
+StatefulSystem::StatefulSystem(const starscope_clock::duration throttle_update) :
+_is_ready(false),
+_throttle_update(throttle_update),
+_last_update(starscope_clock::time_point::min()) {
 }
 
 bool StatefulSystem::init() {
@@ -30,27 +33,33 @@ void StatefulSystem::deinit() {
     _is_ready = false;
 }
 
-void StatefulSystem::update(const starscope_clock::time_point now) {
-    if(_is_ready)
-        _update(now);
-}
-
 bool StatefulSystem::ready() {
     return _is_ready;
 }
 
-bool StatefulSystem::_init() {
-    return true;
+void StatefulSystem::update(const starscope_clock::time_point now) {
+    if(_is_ready && ((now - _last_update > _throttle_update)  || (_last_update == starscope_clock::time_point::min()))) {
+        _last_update = now;
+        _update(now);
+    }
 }
 
-void StatefulSystem::_deinit() {
+void StatefulSystem::set_update_throttle(const starscope_clock::duration update_throttle) {
+    _throttle_update = update_throttle;
 }
 
-void StatefulSystem::_update(const starscope_clock::time_point now) {
-}
+// bool StatefulSystem::_init() {
+//     return true;
+// }
+
+// void StatefulSystem::_deinit() {
+// }
+
+// void StatefulSystem::_update(const starscope_clock::time_point now) {
+// }
 
 
-Size::Size() : Size(0,0) {
+Size::Size() : Size::Size(0,0) {
 }
 
 Size::Size(size_t x, size_t y) : x(x), y(y) {

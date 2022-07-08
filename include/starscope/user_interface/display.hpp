@@ -8,12 +8,14 @@
 #include "starscope/drivers/sharp_mem_display.hpp"
 
 using namespace Starscope;
-namespace Starscope::UserInterfaceDisplay {
+namespace Starscope::UserInterface::Display {
 
 typedef enum {
+    TITLE,
     WORDS,
     ZEBRA,
     CHECKER,
+    FILL,
 } DEMO_STATE;
 
 const size_t SCREEN_SIZE_X = 400;
@@ -34,7 +36,7 @@ class Display : public Utils::StatefulSystem {
     void clear();
     void fill();
 
-    Utils::Size print_ascii(const std::string text, Utils::Size location=Utils::Size(), const bool invert=false, const bool trailing_newline=true, const int scaling=1);
+    Utils::Size print_ascii(const std::string text, const Utils::Size location=Utils::Size(), const bool invert=false, const bool trailing_newline=true, const int scaling=1);
 
     void run_demo();
 

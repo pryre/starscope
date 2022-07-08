@@ -4,7 +4,6 @@
 #include "starscope/hardware_abstraction.hpp"
 #include "starscope/drivers/utils.hpp"
 #include <array>
-#include <vector>
 #include <span>
 #include <chrono>
 
@@ -37,29 +36,27 @@ const std::array<std::byte, MAX_BYTE_COMBINATIONS> BIT_FLIP = {
     std::byte{0x0F}, std::byte{0x8F}, std::byte{0x4F}, std::byte{0xCF}, std::byte{0x2F}, std::byte{0xAF}, std::byte{0x6F}, std::byte{0xEF}, std::byte{0x1F}, std::byte{0x9F}, std::byte{0x5F}, std::byte{0xDF}, std::byte{0x3F}, std::byte{0xBF}, std::byte{0x7F}, std::byte{0xFF}
 };
 
-const std::byte SHARPMEM_BIT_WRITECMD = BIT_FLIP[0x80]; //0x01  # 0x80 in LSB format
-const std::byte SHARPMEM_BIT_VCOM = BIT_FLIP[0x40]; //0x02  # 0x40 in LSB format
-const std::byte SHARPMEM_BIT_CLEAR = BIT_FLIP[0x20]; //0x04  # 0x20 in LSB format
+const std::byte SHARPMEM_BIT_WRITECMD = BIT_FLIP[0x01]; //0x01  # 0x80 in LSB format
+const std::byte SHARPMEM_BIT_VCOM = BIT_FLIP[0x02]; //0x02  # 0x40 in LSB format
+const std::byte SHARPMEM_BIT_CLEAR = BIT_FLIP[0x04]; //0x04  # 0x20 in LSB format
 
 // XXX: By default all of the pixel operations are inverted (0x01 is off)
 const std::byte SHARPMEM_ZERO_BYTE = std::byte{0x00};
 
 const std::byte SHARPMEM_PIXEL_BYTE_OFF = std::byte{0xFF};
 const std::byte SHARPMEM_PIXEL_BYTE_ON = std::byte{0x00};
+const size_t NUM_BITS_IN_BYTE = 8;
 
-const starscope_clock::duration SHARPMEM_UPDATE_RATE = 100ms;
+const starscope_clock::duration SHARPMEM_UPDATE_PERIOD = 100ms;
 
 template<size_t size_x, size_t size_y>
 class Driver : public Utils::StatefulSystem  {
     private:
-    static constexpr size_t _step = size_x/sizeof(std::byte);
-    static constexpr size_t _buffer_length = size_x / sizeof(std::byte) * size_y;
+    static constexpr size_t _step = size_x/NUM_BITS_IN_BYTE;
+    static constexpr size_t _buffer_length = _step * size_y;
     std::array<std::byte, _buffer_length> _lines;
-    //TODO: Should use something that's not a vector?
-    std::vector<size_t> _lines_changed;
+    std::array<bool, size_y> _lines_changed;
     std::byte _vcom;
-    starscope_clock::time_point _last_update;
-    starscope_clock::duration _rate_update;
 
     public:
     Driver();

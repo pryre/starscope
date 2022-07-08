@@ -11,18 +11,21 @@ namespace Starscope::Utils
 class StatefulSystem {
     private:
     bool _is_ready;
+    starscope_clock::duration _throttle_update;
+    starscope_clock::time_point _last_update;
 
     public:
-    StatefulSystem();
+    StatefulSystem(const starscope_clock::duration update_throttle = starscope_clock::duration::zero());
     bool init();
     void deinit();
     bool ready();
     void update(const starscope_clock::time_point now = starscope_clock::now());
+    void set_update_throttle(const starscope_clock::duration update_throttle);
 
     private:
-    virtual bool _init();
-    virtual void _deinit();
-    virtual void _update(const starscope_clock::time_point now);
+    virtual bool _init() = 0;
+    virtual void _deinit() = 0;
+    virtual void _update(const starscope_clock::time_point now) = 0;
 };
 
 

@@ -4,10 +4,8 @@ namespace Starscope::Drivers::SharpMemDisplay {
 
 template<size_t size_x, size_t size_y>
 Driver<size_x, size_y>::Driver() :
-_vcom(SHARPMEM_BIT_VCOM),
-_last_update(starscope_clock::time_point::min()),
-_rate_update(SHARPMEM_UPDATE_RATE) {
-    _lines_changed.reserve(size_y);
+Utils::StatefulSystem{SHARPMEM_UPDATE_PERIOD},
+_vcom(SHARPMEM_BIT_VCOM) {
     // self.lines = [[SharpMemDisplay.SHARPMEM_PIXEL_BYTE_OFF]*(self.size.x//8) for i in range(self.size.y)]
     // self.changed:MutableSet[int] = set()
 }
@@ -20,7 +18,7 @@ void Driver<size_x, size_y>::_toggle_vcom() {
 template<size_t size_x, size_t size_y>
 bool Driver<size_x, size_y>::_init() {
     _vcom = SHARPMEM_BIT_VCOM;
-    _lines_changed.clear();
+    _lines_changed.fill(false);
     clear(false);
 
     return true;
@@ -32,13 +30,11 @@ void Driver<size_x, size_y>::_deinit() {
 
 template<size_t size_x, size_t size_y>
 void Driver<size_x, size_y>::_update(const starscope_clock::time_point now) {
-    //Maintain a background update rate to keep the screen happy (~10Hz)
+    //Setup configured to maintain a background update rate to keep the screen happy (~10Hz)
     //This should also alleviate the need to perform manual sync's on the implementation side
-    if(now - _last_update > _rate_update) {
-        // with benchmark("sync"):
-        sync();
-        _last_update = now;
-    }
+
+    // with benchmark("sync"):
+    sync();
 }
 
 // template<size_t size_x, size_t size_y>
@@ -49,10 +45,7 @@ void Driver<size_x, size_y>::_update(const starscope_clock::time_point now) {
 
 template<size_t size_x, size_t size_y>
 void Driver<size_x, size_y>::set_all(const bool onoff, const bool set_changed) {
-    if(set_changed)
-        for(size_t i=0; i<size_y; i++)
-        _lines_changed.push_back(i);
-
+    _lines_changed.fill(true);
     _lines.fill(onoff ? SHARPMEM_PIXEL_BYTE_ON : SHARPMEM_PIXEL_BYTE_OFF);
 }
 
@@ -73,12 +66,12 @@ void Driver<size_x, size_y>::fill(const bool set_changed) {
 
 template<size_t size_x, size_t size_y>
 size_t Driver<size_x, size_y>::_ind_from_x_y(const size_t x, const size_t y) const {
-    return y * _step + x/sizeof(std::byte);
+    return y * _step + x/NUM_BITS_IN_BYTE;
 }
 
 template<size_t size_x, size_t size_y>
 std::byte Driver<size_x, size_y>::_sub_byte_bitmask(const size_t x) const {
-    const uint8_t step = x%sizeof(std::byte);
+    const uint8_t step = x%NUM_BITS_IN_BYTE;
     return std::byte{(uint8_t)(0b1000'0000 >> step)};
 }
 
@@ -101,7 +94,7 @@ void Driver<size_x, size_y>::set_pixel(const size_t x, const size_t y, const boo
 
         // Mark the line to be sync'd later
         if (set_changed)
-            _lines_changed.push_back(y);
+            _lines_changed[y] = true;
     }
 }
 
@@ -114,7 +107,7 @@ void Driver<size_x, size_y>::set_line_horizontal(const size_t y, const bool valu
 
     // Mark the line to be sync'd later
     if (set_changed)
-        _lines_changed.push_back(y);
+        _lines_changed[y] = true;
 }
 
 template<size_t size_x, size_t size_y>
@@ -133,7 +126,7 @@ void Driver<size_x, size_y>::set_line_vertical(const size_t x, const bool value,
 
         // Mark the line to be sync'd later
         if (set_changed)
-            _lines_changed.push_back(y);
+            _lines_changed[y] = true;
     }
 }
 
@@ -162,22 +155,23 @@ void Driver<size_x, size_y>::sync() {
 
     spi_write(_vcom | SHARPMEM_BIT_WRITECMD);
 
-    for(auto&y : _lines_changed) {
-        spi_write(BIT_FLIP[y+1]);
+    for(size_t y=0; y < _lines_changed.size(); y++) {
+        if(_lines_changed[y]) {
+            spi_write(BIT_FLIP[y+1]);
 
-        std::span line = lines.subspan(_ind_from_x_y(0,y), _step);
+            std::span line = lines.subspan(_ind_from_x_y(0,y), _step);
+            spi_write(line);
 
-        for(auto&b : line)
-            spi_write(b);
-
-        spi_write(SHARPMEM_ZERO_BYTE);
+            spi_write(SHARPMEM_ZERO_BYTE);
+        }
     }
 
     spi_write(SHARPMEM_ZERO_BYTE);
 
     _toggle_vcom();
     spi_set_cs(STARSCOPE_SPI_SELECT::None);
-    _lines_changed.clear();
+
+    _lines_changed.fill(false);
 }
 
 template<size_t size_x, size_t size_y>

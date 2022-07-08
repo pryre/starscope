@@ -6,6 +6,8 @@
 
 uint64_t time_monotonic_us();
 
+void heartbeat_set(const bool onoff);
+
 typedef enum {
     None,
     SharpMemDisplay,

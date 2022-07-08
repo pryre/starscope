@@ -3,10 +3,10 @@
 #include "starscope/drivers/sharp_mem_display.hpp"
 
 using namespace Starscope;
-namespace Starscope::UserInterfaceDisplay {
+namespace Starscope::UserInterface::Display {
 
 Display::Display() :
-_state(DEMO_STATE::WORDS),
+_state(DEMO_STATE::TITLE),
 _screen() {
 }
 
@@ -21,7 +21,6 @@ void Display::_deinit() {
     clear();
     _screen.deinit();
 }
-
 
 size_t Display::px_from_line(const size_t line, const size_t start_y) const {
     return (start_y + FONT_HEIGHT * line) % _screen.size().y;
@@ -59,7 +58,7 @@ void Display::fill() {
     _screen.fill();
 }
 
-Utils::Size Display::print_ascii(const std::string text, Utils::Size location, const bool invert, const bool trailing_newline, const int scaling) {
+Utils::Size Display::print_ascii(const std::string text, const Utils::Size location, const bool invert, const bool trailing_newline, const int scaling) {
     size_t col = 0;
     size_t row = 0;
 
@@ -70,7 +69,7 @@ Utils::Size Display::print_ascii(const std::string text, Utils::Size location, c
             col = 0;
             row += scaling;
         } else if(i >= ASCII_PRINTABLE_START) {
-            render_font(font8x8_basic[i-ASCII_PRINTABLE_START], location.x + col*FONT_WIDTH, location.y + row*FONT_HEIGHT, invert, scaling);
+            render_font(font8x8_basic[(uint8_t)i], location.x + col*FONT_WIDTH, location.y + row*FONT_HEIGHT, invert, scaling);
             col += scaling;
         }
     }
@@ -88,6 +87,33 @@ void Display::run_demo() {
 
     switch (_state)
     {
+    case DEMO_STATE::TITLE : {
+        // print("Demo words!");
+        Utils::Size start(44, 85);
+        // start = print_ascii("▛▀▀▀▀▀▀▀▀▀▀▀▜", start, false, true, 3);
+        start = print_ascii("  Starscope  ", start, false, true, 3);
+        // start = print_ascii("▙▄▄▄▄▄▄▄▄▄▄▄▟", start, false, true, 3);
+        _state = DEMO_STATE::WORDS;
+        break;
+    }
+    case DEMO_STATE::WORDS : {
+        // print("Demo words!");
+        Utils::Size start;
+        start = print_ascii("Hello World", start, false, false);
+        start = print_ascii(", this is me~", start);
+        start.x = 0;    //Reset line to start
+        start = print_ascii("Thus, a new\nlegend is born", start, true);
+        start = print_ascii("...and the world goes on anew", start);
+
+        _state = DEMO_STATE::FILL;
+        break;
+    }
+    case DEMO_STATE::FILL: {
+        // print_ascii("Demo zebra!");
+        _screen.fill();
+        _state = DEMO_STATE::ZEBRA;
+        break;
+    }
     case DEMO_STATE::ZEBRA: {
         // print_ascii("Demo zebra!");
         _screen.demo_zebra();
@@ -97,22 +123,12 @@ void Display::run_demo() {
     case DEMO_STATE::CHECKER: {
         // print_ascii("Demo zebra!");
         _screen.demo_checker();
-        _state = DEMO_STATE::WORDS;
-        break;
-    }
-    case DEMO_STATE::WORDS : {
-        // print("Demo words!");
-        Utils::Size start;
-        start = print_ascii("Hello World", start, false, false);
-        start = print_ascii(", this is me~", start);
-        start = print_ascii("Thus, a new\nlegend is born", start, true);
-        start = print_ascii("...and the world goes on anew", start);
-
-        _state = DEMO_STATE::ZEBRA;
+        _state = DEMO_STATE::TITLE;
         break;
     }
     default: {
         print_ascii("Unknown demo!");
+        _state = DEMO_STATE::TITLE;
         break;
     }
     }

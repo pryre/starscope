@@ -78,6 +78,17 @@
             "problemMatcher": [
                 "$gcc"
             ]
+        },
+        {
+            "label": "monitor_debug",
+            "command": "picocom",
+            "args": [
+                "-b",
+                "115200",
+                "/dev/ttyACM0"
+            ],
+            "type": "shell",
+            "problemMatcher": []
         }
     ]
 }

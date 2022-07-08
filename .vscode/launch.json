@@ -1,7 +1,7 @@
 {
     "configurations": [
         {
-            "name": "Pico Debug",
+            "name": "Pico Debug (Picoprobe)",
             "cwd": "${workspaceRoot}",
             "executable": "${command:cmake.launchTargetPath}",
             "request": "launch",
@@ -11,12 +11,12 @@
             "gdbPath" : "arm-none-eabi-gdb",
             "device": "RP2040",
             "configFiles": [
-                "raspberrypi-swd.cfg",
+                "interface/picoprobe.cfg",
                 "target/rp2040.cfg"
             ],
             // "svdFile": "${env:PICO_SDK_PATH}/src/rp2040/hardware_regs/rp2040.svd",
             "svdFile": "/usr/share/pico-sdk/src/rp2040/hardware_regs/rp2040.svd",
-            "runToMain": true,
+            "runToEntryPoint": "main",
             // Work around for stopping at main on restart
             "postRestartCommands": [
                 "break main",
@@ -24,7 +24,7 @@
             ]
         },
         {
-            "name": "Pico (BMP)",
+            "name": "Pico Debug (BMP)",
             "type": "cppdbg",
             "request": "launch",
             "cwd": "${workspaceRoot}",

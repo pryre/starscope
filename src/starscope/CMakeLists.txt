@@ -26,6 +26,7 @@ pico_sdk_init()
 #=================================
 # DRIVER DEPENDENCIES
 #=================================
+include(${CMAKE_CURRENT_LIST_DIR}/system/CMakeLists.txt)
 include(${CMAKE_CURRENT_LIST_DIR}/drivers/CMakeLists.txt)
 include(${CMAKE_CURRENT_LIST_DIR}/user_interface/CMakeLists.txt)
 
@@ -45,12 +46,16 @@ target_link_libraries(${_NODE_NAME} PUBLIC
     ${_DRIVERS_UTILS_NAME}
     ${_DRIVERS_MPU6050_NAME}
     ${_STARSCOPE_UI_DISPLAY_NAME}
+    ${_STARSCOPE_UI_HEARTBEAT_NAME}
+    ${_STARSCOPE_SYSTEM_STATE_NAME}
 )
 
+pico_enable_stdio_uart(${_NODE_NAME} 1)
 if (TARGET tinyusb_device)
-        # enable usb output, disable uart output
+        # enable usb output
         pico_enable_stdio_usb(${_NODE_NAME} 1)
-        pico_enable_stdio_uart(${_NODE_NAME} 0)
+        #disable uart output
+        #pico_enable_stdio_uart(${_NODE_NAME} 0)
         # target_compile_definitions(${_NODE_NAME} PRIVATE
         #     PICO_STDIO_USB_CONNECT_WAIT_TIMEOUT_MS=5000
         # )

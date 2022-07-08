@@ -4,10 +4,14 @@
 #include "hardware/i2c.h"
 #include "hardware/spi.h"
 #include "starscope/hardware_abstraction.hpp"
+#include "starscope/system/state.hpp"
 #include "starscope/drivers/utils.hpp"
 #include "starscope/drivers/mpu6050.hpp"
 #include "starscope/user_interface/display.hpp"
+#include "starscope/user_interface/heartbeat.hpp"
+#include <chrono>
 
+using namespace std::chrono_literals;
 using namespace Starscope;
 
 #define STARSCOPE_SPI_HARDWARE spi0
@@ -15,6 +19,8 @@ using namespace Starscope;
 #define STARSCOPE_PIN_SPI_SCK 2
 #define STARSCOPE_PIN_SPI_MOSI 3
 // #define STARSCOPE_PIN_SPI_MISO 4
+#define STARSCOPE_PIN_SPI_CS_ACTIVE true
+#define STARSCOPE_PIN_SPI_CS_STOP false
 #define STARSCOPE_PIN_SPI_CS_SHARPMEMDISPLAY 5
 
 #define STARSCOPE_I2C_HARDWARE i2c1
@@ -23,6 +29,8 @@ using namespace Starscope;
 #define STARSCOPE_PIN_I2C_SCL 7
 
 #define STARSCOPE_PIN_LED PICO_DEFAULT_LED_PIN
+#define STARSCOPE_LED_ON true
+#define STARSCOPE_LED_OFF false
 
 //=====================
 // Hardware Abstraction
@@ -30,6 +38,15 @@ using namespace Starscope;
 uint64_t time_monotonic_us() {
     return time_us_64();
 }
+
+void heartbeat_set(const bool onoff) {
+    if(onoff) {
+        gpio_put(STARSCOPE_PIN_LED, STARSCOPE_LED_ON);
+    } else {
+        gpio_put(STARSCOPE_PIN_LED, STARSCOPE_LED_OFF);
+    }
+}
+
 
 size_t spi_write(const std::byte src) {
     return spi_write_blocking(STARSCOPE_SPI_HARDWARE, (uint8_t*)&src, 1);
@@ -42,12 +59,12 @@ size_t spi_write(const std::span<const std::byte>src) {
 void spi_set_cs(STARSCOPE_SPI_SELECT chip) {
     switch(chip) {
     case STARSCOPE_SPI_SELECT::SharpMemDisplay: {
-        gpio_put(STARSCOPE_PIN_SPI_CS_SHARPMEMDISPLAY, false);
+        gpio_put(STARSCOPE_PIN_SPI_CS_SHARPMEMDISPLAY, STARSCOPE_PIN_SPI_CS_ACTIVE);
         break;
     }
     default: { //None
-        //Set all CS pins high here
-        gpio_put(STARSCOPE_PIN_SPI_CS_SHARPMEMDISPLAY, true);
+        //XXX: Set all CS pins high here
+        gpio_put(STARSCOPE_PIN_SPI_CS_SHARPMEMDISPLAY, STARSCOPE_PIN_SPI_CS_STOP);
         break;
     }
     }
@@ -99,7 +116,7 @@ void init_hardware_spi() {
     // Chip select is active-low, so we'll initialise it to a driven-high state
     gpio_init(STARSCOPE_PIN_SPI_CS_SHARPMEMDISPLAY);
     gpio_set_dir(STARSCOPE_PIN_SPI_CS_SHARPMEMDISPLAY, GPIO_OUT);
-    gpio_put(STARSCOPE_PIN_SPI_CS_SHARPMEMDISPLAY, false);
+    spi_set_cs(STARSCOPE_SPI_SELECT::None);
     // Make the CS pin available to picotool
     bi_decl(bi_1pin_with_name(STARSCOPE_PIN_SPI_CS_SHARPMEMDISPLAY, "SPI CS"));
 }
@@ -109,53 +126,57 @@ void init_hardware_spi() {
 //=====================
 int main() {
     stdio_init_all();
-
+    System::set_mode(System::Mode::INITIALIZE);
     Utils::Timer timer_init("Initialization");
     init_hardware_heartbeat();
     init_hardware_i2c();
     init_hardware_spi();
     timer_init.end();
 
+    UserInterface::Heartbeat::Light light;
+    if(!light.init())
+        printf("Failed to initialize light\n");
+
     Drivers::MPU6050::Driver mpu6050;
     if(!mpu6050.init())
         printf("Failed to initialize MPU6050\n");
 
-    UserInterfaceDisplay::Display display;
+    UserInterface::Display::Display display;
     if(!display.init())
         printf("Failed to initialize display\n");
 
+    bool first_pass = true;
+    bool usb_cdc_sent_header = false;
 
-    bool stdio_sent_header = false;
+    starscope_clock::time_point demo_last = starscope_clock::time_point::min();
+    starscope_clock::duration demo_period = 5s;
 
+    System::set_mode(System::Mode::ACTIVE);
     while (true) {
-        if(stdio_usb_connected() && !stdio_sent_header) {
+        if(first_pass || (!usb_cdc_sent_header && stdio_usb_connected() ))  {
             printf("\n--== STARSCOPE ==--\n");
             printf(timer_init.to_string().c_str());
-            stdio_sent_header = true;
+
+            first_pass = false;
+
+            if(stdio_usb_connected())
+                usb_cdc_sent_header = true;
         }
 
-        gpio_put(STARSCOPE_PIN_LED, 1);
-        // run_scan(STARSCOPE_I2C);
-        if(mpu6050.ready()) {
-            auto data = mpu6050.get_values();
-            printf("\nAccel: ");
-            printf(data.acceleration.to_string().c_str());
-            printf("\nGyro: ");
-            printf(data.rates.to_string().c_str());
-            printf("\nTemp: %0.2f\n", data.temperature);
-        } else {
-            printf("MPU6050 not initialized\n");
+        light.update();
+        display.update();
+
+        const auto now = starscope_clock::now();
+        if((now - demo_last > demo_period) || (demo_last == starscope_clock::time_point::min())) {
+            if(display.ready()) {
+                printf("Running demo...\n");
+                display.run_demo();
+            } else {
+                printf("display not initialized\n");
+            }
+
+            demo_last = now;
         }
-
-        // if(display.ready()) {
-        //     display.run_demo();
-        // } else {
-        //     printf("display not initialized\n");
-        // }
-
-        sleep_ms(250);
-        gpio_put(STARSCOPE_PIN_LED, 0);
-        sleep_ms(250);
     }
 // #endif
     return 0;
