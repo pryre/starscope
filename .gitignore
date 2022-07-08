@@ -4,6 +4,8 @@
 .vscode/ipch
 .vscode/Pico-Stub
 .vscode/pico-go.json
+.vscode/*.state.json
+.vscode/..*.state.json
 
 .venv
 *.pyc
