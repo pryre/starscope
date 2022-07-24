@@ -86,3 +86,11 @@ xPSR: 0xf1000000 pc: 0x000000ee msp: 0x20041f00
 
 ### Issues (DAP Init Failed)
 This suggest that your configuration and setup is good, but your wiring has an issue. This could mean your wires are too long, or simply not plugged into the correct pins.
+
+### Issues (Error: spawn nm-multiarch ENOENT)
+```
+pikaur -S arm-none-eabi-binutils
+cd /usr/local/bin
+sudo ln -s /usr/bin/objdump objdump-multiarch
+sudo ln -s /usr/bin/nm nm-multiarch
+```
